@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>향수 아카이브 (ScentTrack)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans"> 
+
+  <!-- 상단 헤더 -->
+  <header class="sticky top-0 z-30 bg-slate-800/90 backdrop-blur-md border-b border-slate-700/80 px-4 md:px-8 py-3.5">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 text-lg">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div>
+          <h1 class="text-base md:text-lg font-bold text-white flex items-center gap-2">
+            ScentTrack <span class="text-xs font-normal text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">Perfume Archive</span>
+          </h1>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="openModal()" class="text-xs md:text-sm bg-purple-600 hover:bg-purple-500 text-white font-semibold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-purple-600/20">
+          <i class="fa-solid fa-plus text-xs"></i> 향수 등록
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 본문 -->
+  <main class="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+
+    <!-- 상단 대시보드 요약 및 필터 바 -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4">
+        <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-spray-can text-purple-400"></i> 총 컬렉션
+        </div>
+        <div id="stat-total" class="text-2xl font-bold text-white font-mono">0</div>
+      </div>
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4">
+        <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-star text-amber-400"></i> 평균 평점
+        </div>
+        <div id="stat-rating" class="text-2xl font-bold text-amber-300 font-mono">0.0</div>
+      </div>
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4">
+        <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-heart text-rose-400"></i> 인생향수 (5★)
+        </div>
+        <div id="stat-favs" class="text-2xl font-bold text-rose-300 font-mono">0</div>
+      </div>
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4">
+        <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-clock-rotate-left text-cyan-400"></i> 시향기 작성
+        </div>
+        <div id="stat-reviewed" class="text-2xl font-bold text-cyan-300 font-mono">0</div>
+      </div>
+    </div>
+
+    <!-- 검색 및 필터 컨트롤러 -->
+    <div class="bg-slate-800/60 border border-slate-700/70 rounded-2xl p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
+      <div class="relative w-full md:w-80">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+        <input id="search-input" oninput="renderCards()" type="text" placeholder="브랜드, 향수명, 노트 검색..." 
+          class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs md:text-sm text-white focus:outline-none focus:border-purple-500 placeholder-slate-500" />
+      </div>
+
+      <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+        <button onclick="setFilter('all')" class="filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-purple-600 text-white" data-type="all">전체</button>
+        <button onclick="setFilter('시트러스')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-400 hover:text-white border border-slate-700" data-type="시트러스">시트러스</button>
+        <button onclick="setFilter('플로럴')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-400 hover:text-white border border-slate-700" data-type="플로럴">플로럴</button>
+        <button onclick="setFilter('우디')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-400 hover:text-white border border-slate-700" data-type="우디">우디</button>
+        <button onclick="setFilter('머스크/비누')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-400 hover:text-white border border-slate-700" data-type="머스크/비누">머스크/비누</button>
+        <button onclick="setFilter('스파이시/오리엔탈')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-400 hover:text-white border border-slate-700" data-type="스파이시/오리엔탈">스파이시</button>
+      </div>
+    </div>
+
+    <!-- 카드 그리드 뷰 -->
+    <div id="perfume-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- 렌더링 영역 -->
+    </div>
+  </main>
+
+  <!-- 향수 등록/수정 모달 -->
+  <div id="modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50 overflow-y-auto">
+    <div class="bg-slate-800 rounded-2xl max-w-lg w-full p-6 border border-slate-700 shadow-2xl space-y-4 my-8">
+      <div class="flex justify-between items-center border-b border-slate-700/80 pb-3">
+        <h3 id="modal-title" class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> 새 향수 등록
+        </h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <input type="hidden" id="edit-id" />
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">브랜드 명 *</label>
+          <input id="form-brand" type="text" placeholder="예: 르라보, 딥티크, 바이레도" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">향수 명칭 *</label>
+          <input id="form-name" type="text" placeholder="예: 상탈 33, 플레르 드 뽀" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">메인 계열</label>
+          <select id="form-category" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:border-purple-500 focus:outline-none">
+            <option value="우디">우디</option>
+            <option value="시트러스">시트러스</option>
+            <option value="플로럴">플로럴</option>
+            <option value="머스크/비누">머스크/비누</option>
+            <option value="그린/허벌">그린/허벌</option>
+            <option value="스파이시/오리엔탈">스파이시/오리엔탈</option>
+            <option value="구르망/달달">구르망/달달</option>
+            <option value="아쿠아/프레시">아쿠아/프레시</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">농도(타입)</label>
+          <select id="form-concentration" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:border-purple-500 focus:outline-none">
+            <option value="EDP">오 드 퍼퓸 (EDP)</option>
+            <option value="EDT">오 드 뚜왈렛 (EDT)</option>
+            <option value="Parfum">퍼퓸 / 엑스트레</option>
+            <option value="EDC">오 드 코롱 (EDC)</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">추천 계절</label>
+          <select id="form-season" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:border-purple-500 focus:outline-none">
+            <option value="사계절">사계절</option>
+            <option value="봄/가을">봄/가을</option>
+            <option value="여름">여름</option>
+            <option value="겨울">겨울</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">용량 / 잔여량 (%)</label>
+          <div class="flex items-center gap-2">
+            <input id="form-capacity" type="text" placeholder="50ml, 100ml" class="w-24 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
+            <input id="form-remain" type="range" min="0" max="100" value="100" class="flex-1 accent-purple-500" oninput="document.getElementById('remain-val').innerText = this.value + '%'" />
+            <span id="remain-val" class="text-xs text-purple-300 font-mono w-10 text-right">100%</span>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">내 평점</label>
+          <select id="form-rating" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-amber-300 font-semibold focus:border-purple-500 focus:outline-none">
+            <option value="5">★★★★★ (인생 향수)</option>
+            <option value="4">★★★★☆ (매우 호감)</option>
+            <option value="3">★★★☆☆ (무난함)</option>
+            <option value="2">★★☆☆☆ (아쉬움)</option>
+            <option value="1">★☆☆☆☆ (불호)</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">노트 구성 (탑 / 미들 / 베이스)</label>
+        <input id="form-notes" type="text" placeholder="예: 베르가못 / 아이리스, 바이올렛 / 샌달우드, 머스크" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">시향 메모 & 착향 후기</label>
+        <textarea id="form-memo" rows="3" placeholder="첫 느낌, 잔향의 지속력, 어울리는 룩이나 이미지 등을 자유롭게 메모하세요." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white focus:border-purple-500 focus:outline-none"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-700/80">
+        <button onclick="closeModal()" class="px-4 py-2 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl transition">취소</button>
+        <button onclick="savePerfume()" class="px-5 py-2 text-xs bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition shadow">저장하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🌐 패밀리 사이트 퀵 네비게이터 플로팅 UI -->
+  <div class="fixed bottom-6 right-6 z-50">
+    <div id="family-site-menu" class="hidden mb-3 w-52 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl p-2 space-y-1 transition-all">
+      <div class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800/80 mb-1">
+        Family Sites
+      </div>
+      
+      <!-- 포털 허브 -->
+      <a href="https://jck0306-art.github.io/portal/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
+        <div class="w-6 h-6 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition">
+          <i class="fa-solid fa-house text-[10px]"></i>
+        </div>
+        <span>포털 허브</span>
+      </a>
+
+      <!-- 1. 자격증 관리 -->
+      <a href="https://jck0306-art.github.io/license-mgmt/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
+        <div class="w-6 h-6 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition">
+          <i class="fa-solid fa-graduation-cap text-[10px]"></i>
+        </div>
+        <span>자격증 관리</span>
+      </a>
+
+      <!-- 2. 철분 관리 (IronTrack) -->
+      <a href="https://jck0306-art.github.io/IronTrack/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
+        <div class="w-6 h-6 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 group-hover:bg-rose-600 group-hover:text-white transition">
+          <i class="fa-solid fa-droplet text-[10px]"></i>
+        </div>
+        <span>철분 관리 (IronTrack)</span>
+      </a>
+
+      <!-- 3. 덕질 아카이브 -->
+      <a href="https://jck0306-art.github.io/virtual/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
+        <div class="w-6 h-6 rounded-lg bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400 group-hover:bg-pink-600 group-hover:text-white transition">
+          <i class="fa-solid fa-compact-disc text-[10px]"></i>
+        </div>
+        <span>덕질 아카이브</span>
+      </a>
+
+      <!-- 4. 향수 아카이브 (현재 사이트) -->
+      <div class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-purple-300 bg-purple-500/20 border border-purple-500/30">
+        <div class="w-6 h-6 rounded-lg bg-purple-500/30 flex items-center justify-center text-purple-300">
+          <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+        </div>
+        <span>향수 아카이브 (현재)</span>
+      </div>
+    </div>
+
+    <!-- 플로팅 토글 버튼 -->
+    <button id="family-site-btn" onclick="toggleFamilySiteMenu()" class="w-12 h-12 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700/80 shadow-2xl flex items-center justify-center text-lg transition duration-200 hover:scale-105 active:scale-95 ml-auto">
+      <i id="family-site-icon" class="fa-solid fa-layer-group text-purple-400"></i>
+    </button>
+  </div>
+
+  <script>
+    // 기본 초기 데이터 샘플
+    const DEFAULT_ITEMS = [
+      {
+        id: 'p_1',
+        brand: 'Le Labo',
+        name: 'Santal 33',
+        category: '우디',
+        concentration: 'EDP',
+        season: '가을/겨울',
+        capacity: '50ml',
+        remain: 80,
+        rating: 5,
+        notes: '바이올렛, 카다멈 / 아이리스, 앰브록스 / 샌달우드, 시더우드, 가죽',
+        memo: '처음엔 종이 태우는 듯 스파이시하지만 살에 스며들수록 부드럽고 매력적인 샌달우드 잔향.'
+      },
+      {
+        id: 'p_2',
+        brand: 'Diptyque',
+        name: 'Fleur de Peau',
+        category: '머스크/비누',
+        concentration: 'EDP',
+        season: '사계절',
+        capacity: '75ml',
+        remain: 65,
+        rating: 5,
+        notes: '알데하이드, 핑크페퍼 / 아이리스, 터키쉬로즈 / 머스크, 앰버그리스',
+        memo: '피부 살냄새의 정석. 포근하고 고급스러운 파우더리 머스크 잔향이 하루종일 맴돈다.'
+      }
+    ];
+
+    let perfumes = JSON.parse(localStorage.getItem('scent_archive_v1')) || DEFAULT_ITEMS;
+    let currentCategory = 'all';
+
+    function saveToStorage() {
+      localStorage.setItem('scent_archive_v1', JSON.stringify(perfumes));
+      updateStats();
+      renderCards();
+    }
+
+    function updateStats() {
+      document.getElementById('stat-total').innerText = perfumes.length;
+      const avg = perfumes.length ? (perfumes.reduce((acc, cur) => acc + Number(cur.rating), 0) / perfumes.length).toFixed(1) : '0.0';
+      document.getElementById('stat-rating').innerText = avg;
+      document.getElementById('stat-favs').innerText = perfumes.filter(p => Number(p.rating) === 5).length;
+      document.getElementById('stat-reviewed').innerText = perfumes.filter(p => p.memo && p.memo.trim().length > 0).length;
+    }
+
+    function setFilter(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        if (btn.dataset.type === cat) {
+          btn.className = "filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-purple-600 text-white";
+        } else {
+          btn.className = "filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-400 hover:text-white border border-slate-700";
+        }
+      });
+      renderCards();
+    }
+
+    function renderCards() {
+      const container = document.getElementById('perfume-grid');
+      const search = document.getElementById('search-input').value.toLowerCase().trim();
+
+      const filtered = perfumes.filter(item => {
+        const matchCategory = (currentCategory === 'all') || (item.category === currentCategory);
+        const matchSearch = !search || 
+          item.brand.toLowerCase().includes(search) || 
+          item.name.toLowerCase().includes(search) || 
+          (item.notes && item.notes.toLowerCase().includes(search));
+        return matchCategory && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-16 text-center bg-slate-800/40 rounded-2xl border border-dashed border-slate-700 text-slate-500">
+            <i class="fa-solid fa-wind text-3xl mb-2 block"></i>
+            등록된 향수가 없거나 검색 조건과 일치하는 향수가 없습니다.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => `
+        <div class="bg-slate-800 rounded-2xl border border-slate-700/80 p-5 shadow-lg hover:border-purple-500/50 transition group flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-purple-400 block">${escapeHTML(item.brand)}</span>
+                <h3 class="text-base font-bold text-white group-hover:text-purple-300 transition">${escapeHTML(item.name)}</h3>
+              </div>
+              <div class="flex items-center gap-1 text-slate-500">
+                <button onclick="openModal('${item.id}')" class="p-1.5 hover:text-amber-300 text-xs transition" title="수정"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="deletePerfume('${item.id}')" class="p-1.5 hover:text-rose-400 text-xs transition" title="삭제"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+
+            <!-- 태그 배지들 -->
+            <div class="flex flex-wrap gap-1.5 text-[11px]">
+              <span class="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/30">${escapeHTML(item.category)}</span>
+              <span class="px-2 py-0.5 rounded-md bg-slate-700/70 text-slate-300">${escapeHTML(item.concentration)}</span>
+              <span class="px-2 py-0.5 rounded-md bg-slate-700/70 text-slate-300">${escapeHTML(item.season)}</span>
+            </div>
+
+            <!-- 잔여량 게이지 -->
+            <div class="space-y-1 pt-1">
+              <div class="flex justify-between text-[11px] text-slate-400">
+                <span>잔여량 (${escapeHTML(item.capacity || '-')})</span>
+                <span class="font-mono text-purple-300 font-semibold">${item.remain}%</span>
+              </div>
+              <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
+                <div class="h-full bg-purple-500 rounded-full" style="width: ${item.remain}%"></div>
+              </div>
+            </div>
+
+            <!-- 노트 -->
+            ${item.notes ? `
+              <div class="text-xs text-slate-400 bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/50">
+                <span class="text-slate-500 font-semibold block text-[10px] uppercase mb-0.5">Notes</span>
+                <p class="leading-relaxed line-clamp-2">${escapeHTML(item.notes)}</p>
+              </div>
+            ` : ''}
+
+            <!-- 시향 메모 -->
+            ${item.memo ? `
+              <p class="text-xs text-slate-300 bg-slate-800/80 p-2.5 rounded-xl border-l-2 border-purple-500 italic">
+                "${escapeHTML(item.memo)}"
+              </p>
+            ` : ''}
+          </div>
+
+          <!-- 별점 푸터 -->
+          <div class="pt-4 mt-3 border-t border-slate-700/60 flex items-center justify-between">
+            <div class="text-amber-400 text-xs">
+              ${'★'.repeat(Number(item.rating))}${'☆'.repeat(5 - Number(item.rating))}
+            </div>
+            <span class="text-[11px] text-slate-500 font-mono">Rating ${item.rating}.0</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openModal(id = null) {
+      const modal = document.getElementById('modal');
+      const title = document.getElementById('modal-title');
+      const editId = document.getElementById('edit-id');
+
+      if (id) {
+        const item = perfumes.find(p => p.id === id);
+        if (!item) return;
+        title.innerHTML = `<i class="fa-solid fa-pen text-purple-400"></i> 향수 정보 수정`;
+        editId.value = item.id;
+        document.getElementById('form-brand').value = item.brand || '';
+        document.getElementById('form-name').value = item.name || '';
+        document.getElementById('form-category').value = item.category || '우디';
+        document.getElementById('form-concentration').value = item.concentration || 'EDP';
+        document.getElementById('form-season').value = item.season || '사계절';
+        document.getElementById('form-capacity').value = item.capacity || '';
+        document.getElementById('form-remain').value = item.remain !== undefined ? item.remain : 100;
+        document.getElementById('remain-val').innerText = (item.remain !== undefined ? item.remain : 100) + '%';
+        document.getElementById('form-rating').value = item.rating || 5;
+        document.getElementById('form-notes').value = item.notes || '';
+        document.getElementById('form-memo').value = item.memo || '';
+      } else {
+        title.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> 새 향수 등록`;
+        editId.value = '';
+        document.getElementById('form-brand').value = '';
+        document.getElementById('form-name').value = '';
+        document.getElementById('form-capacity').value = '';
+        document.getElementById('form-remain').value = 100;
+        document.getElementById('remain-val').innerText = '100%';
+        document.getElementById('form-rating').value = 5;
+        document.getElementById('form-notes').value = '';
+        document.getElementById('form-memo').value = '';
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function savePerfume() {
+      const editId = document.getElementById('edit-id').value;
+      const brand = document.getElementById('form-brand').value.trim();
+      const name = document.getElementById('form-name').value.trim();
+      const category = document.getElementById('form-category').value;
+      const concentration = document.getElementById('form-concentration').value;
+      const season = document.getElementById('form-season').value;
+      const capacity = document.getElementById('form-capacity').value.trim();
+      const remain = Number(document.getElementById('form-remain').value);
+      const rating = Number(document.getElementById('form-rating').value);
+      const notes = document.getElementById('form-notes').value.trim();
+      const memo = document.getElementById('form-memo').value.trim();
+
+      if (!brand || !name) {
+        alert('브랜드명과 향수 명칭은 필수 입력값입니다.');
+        return;
+      }
+
+      if (editId) {
+        const item = perfumes.find(p => p.id === editId);
+        if (item) {
+          item.brand = brand;
+          item.name = name;
+          item.category = category;
+          item.concentration = concentration;
+          item.season = season;
+          item.capacity = capacity;
+          item.remain = remain;
+          item.rating = rating;
+          item.notes = notes;
+          item.memo = memo;
+        }
+      } else {
+        perfumes.unshift({
+          id: 'p_' + Date.now(),
+          brand,
+          name,
+          category,
+          concentration,
+          season,
+          capacity,
+          remain,
+          rating,
+          notes,
+          memo
+        });
+      }
+
+      closeModal();
+      saveToStorage();
+    }
+
+    function deletePerfume(id) {
+      if (!confirm('이 향수 아카이브를 삭제하시겠습니까?')) return;
+      perfumes = perfumes.filter(p => p.id !== id);
+      saveToStorage();
+    }
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // 패밀리 사이트 토글 메뉴
+    function toggleFamilySiteMenu() {
+      const menu = document.getElementById('family-site-menu');
+      const icon = document.getElementById('family-site-icon');
+      if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        icon.className = "fa-solid fa-xmark text-slate-400 text-base";
+      } else {
+        menu.classList.add('hidden');
+        icon.className = "fa-solid fa-layer-group text-purple-400";
+      }
+    }
+
+    document.addEventListener('click', function(e) {
+      const container = document.getElementById('family-site-menu')?.parentElement;
+      const menu = document.getElementById('family-site-menu');
+      const icon = document.getElementById('family-site-icon');
+      if (container && !container.contains(e.target) && menu && !menu.classList.contains('hidden')) {
+        menu.classList.add('hidden');
+        if (icon) icon.className = "fa-solid fa-layer-group text-purple-400";
+      }
+    });
+
+    // 초기 실행
+    updateStats();
+    renderCards();
+  </script>
+</body>
+</html>
