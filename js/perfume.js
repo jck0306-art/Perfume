@@ -4,39 +4,61 @@ import { escapeHTML } from './security.js';
 let activeCategory = 'all';
 let selectedPerfumeId = null;
 
+// 🎨 프래그런티카 특유의 산뜻하고 화사한 컬러 팔레트 (다크 배경에서도 돋보이는 톤)
 function getAccordStyle(accordName) {
   const name = accordName.toLowerCase();
-  if (name.includes('짠') || name.includes('salty') || name.includes('선박') || name.includes('marine') || name.includes('해양') || name.includes('바다') || name.includes('마린')) {
-    return { bg: 'rgba(30, 95, 160, 0.75)', text: '#bfdbfe', border: 'rgba(96, 165, 250, 0.3)' };
-  }
+
+  // 광물 / 미네랄 / 아쿠아
   if (name.includes('광물') || name.includes('mineral')) {
-    return { bg: 'rgba(74, 138, 148, 0.8)', text: '#e0f2fe', border: 'rgba(56, 189, 248, 0.3)' };
+    return { bg: '#5fb3b3', text: '#ffffff', border: '#7ecece' };
   }
-  if (name.includes('감귤') || name.includes('시트러스') || name.includes('citrus') || name.includes('레몬') || name.includes('오렌지')) {
-    return { bg: 'rgba(195, 175, 45, 0.85)', text: '#1e293b', border: 'rgba(250, 204, 21, 0.4)', fontBold: true };
+  // 짠내 / 소금 / salty
+  if (name.includes('짠') || name.includes('salty') || name.includes('소금')) {
+    return { bg: '#e0f7fa', text: '#006064', border: '#b2ebf2', fontBold: true };
   }
+  // 감귤 / 시트러스 / 레몬
+  if (name.includes('감귤') || name.includes('시트러스') || name.includes('citrus') || name.includes('레몬') || name.includes('오렌지') || name.includes('베르가못')) {
+    return { bg: '#fff04b', text: '#422006', border: '#fef08a', fontBold: true };
+  }
+  // 나무 / 우디
   if (name.includes('나무') || name.includes('우디') || name.includes('woody') || name.includes('cedar') || name.includes('sandal')) {
-    return { bg: 'rgba(125, 78, 48, 0.85)', text: '#fef3c7', border: 'rgba(217, 119, 6, 0.3)' };
+    return { bg: '#93582e', text: '#ffffff', border: '#b47343' };
   }
-  if (name.includes('신선') || name.includes('매콤') || name.includes('spicy') || name.includes('허브') || name.includes('herbal') || name.includes('aromatic') || name.includes('향긋')) {
-    return { bg: 'rgba(110, 150, 75, 0.8)', text: '#f0fdf4', border: 'rgba(134, 239, 172, 0.3)' };
+  // 마린 / 선박 / 바다
+  if (name.includes('선박') || name.includes('marine') || name.includes('바다') || name.includes('마린') || name.includes('해양')) {
+    return { bg: '#2b6cb0', text: '#ffffff', border: '#4299e1' };
   }
-  if (name.includes('이끼') || name.includes('moss') || name.includes('earthy') || name.includes('흙')) {
-    return { bg: 'rgba(105, 125, 100, 0.8)', text: '#f1f5f9', border: 'rgba(148, 163, 184, 0.3)' };
+  // 신선 / 매콤 / 스파이시
+  if (name.includes('신선') || name.includes('매콤') || name.includes('spicy') || name.includes('스파이시')) {
+    return { bg: '#97d159', text: '#14532d', border: '#bbf7d0', fontBold: true };
   }
-  if (name.includes('달콤') || name.includes('sweet') || name.includes('vanilla') || name.includes('구르망') || name.includes('바닐라')) {
-    return { bg: 'rgba(215, 105, 115, 0.8)', text: '#fff1f2', border: 'rgba(253, 164, 175, 0.3)' };
+  // 허브 / 아로마틱
+  if (name.includes('허브') || name.includes('herbal') || name.includes('aromatic') || name.includes('아로마')) {
+    return { bg: '#86bba5', text: '#064e3b', border: '#a7f3d0', fontBold: true };
   }
-  if (name.includes('플로럴') || name.includes('floral') || name.includes('장미') || name.includes('rose')) {
-    return { bg: 'rgba(180, 95, 150, 0.8)', text: '#fdf2f8', border: 'rgba(244, 114, 182, 0.3)' };
+  // 이끼 / 모스
+  if (name.includes('이끼') || name.includes('moss') || name.includes('earthy')) {
+    return { bg: '#8fa87b', text: '#ffffff', border: '#a3be8c' };
   }
+  // 달콤 / 스위트 / 바닐라
+  if (name.includes('달콤') || name.includes('sweet') || name.includes('바닐라') || name.includes('vanilla') || name.includes('구르망')) {
+    return { bg: '#f87171', text: '#ffffff', border: '#fca5a5' };
+  }
+  // 플로럴 / 꽃 / 장미
+  if (name.includes('플로럴') || name.includes('floral') || name.includes('향긋') || name.includes('장미') || name.includes('rose') || name.includes('화이트')) {
+    return { bg: '#f472b6', text: '#ffffff', border: '#fbcfe8' };
+  }
+  // 머스크 / 파우더리 / 비누
   if (name.includes('머스크') || name.includes('musk') || name.includes('파우더') || name.includes('비누')) {
-    return { bg: 'rgba(140, 140, 170, 0.75)', text: '#f8fafc', border: 'rgba(203, 213, 225, 0.3)' };
+    return { bg: '#cbd5e1', text: '#1e293b', border: '#e2e8f0', fontBold: true };
   }
+  // 레더 / 가죽
   if (name.includes('가죽') || name.includes('레더') || name.includes('leather')) {
-    return { bg: 'rgba(90, 60, 50, 0.85)', text: '#fed7aa', border: 'rgba(251, 146, 60, 0.3)' };
+    return { bg: '#b45309', text: '#ffffff', border: '#d97706' };
   }
-  return { bg: 'rgba(90, 80, 130, 0.8)', text: '#ede9fe', border: 'rgba(167, 139, 250, 0.3)' };
+
+  // 기본값: 산뜻한 라벤더 바이올렛
+  return { bg: '#a78bfa', text: '#ffffff', border: '#c4b5fd' };
 }
 
 export function renderCategoryFilters() {
@@ -213,36 +235,6 @@ export function renderPerfumeDetailView() {
         </div>
       </div>
 
-      <!-- 🌟 향 노트 (왼쪽 정렬된 프래그런티카 스타일 차트) -->
-      ${accordsList.length > 0 ? `
-        <div class="bg-slate-950/90 rounded-2xl border border-slate-800/90 p-4 md:p-5 shadow-inner">
-          <div class="mb-3 text-left">
-            <span class="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-              <i class="fa-solid fa-bars-staggered text-purple-400 text-[11px]"></i>
-              향 노트 <span class="text-[10px] font-mono text-purple-400 font-normal">MAIN ACCORDS</span>
-            </span>
-          </div>
-          
-          <!-- 왼쪽 정렬 컨테이너 (items-start) -->
-          <div class="flex flex-col items-start space-y-1.5 w-full">
-            ${accordsList.map((acc, index) => {
-              const widthPct = Math.max(45, 100 - (index * 6));
-              const style = getAccordStyle(acc);
-
-              return `
-                <div class="h-7 rounded-lg flex items-center justify-start pl-3.5 transition-all duration-300 hover:brightness-110 shadow-sm"
-                     style="width: ${widthPct}%; background-color: ${style.bg}; border: 1px solid ${style.border};">
-                  <span class="text-[11px] md:text-xs tracking-wide select-none truncate"
-                        style="color: ${style.text}; font-weight: ${style.fontBold ? '700' : '600'};">
-                    ${escapeHTML(acc)}
-                  </span>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      ` : ''}
-
       <!-- 배지 태그들 & 별점 -->
       <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
         <div class="flex flex-wrap gap-1.5 text-xs">
@@ -306,6 +298,36 @@ export function renderPerfumeDetailView() {
           ${escapeHTML(item.memo || '작성된 시향 메모가 없습니다.')}
         </p>
       </div>
+
+      <!-- 🌟 아래로 이동된 '향 노트' 색상 바 차트 영역 -->
+      ${accordsList.length > 0 ? `
+        <div class="bg-slate-950/90 rounded-2xl border border-slate-800/90 p-4 md:p-5 shadow-inner space-y-3">
+          <div class="text-left">
+            <span class="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-bars-staggered text-purple-400 text-[11px]"></i>
+              향 노트 <span class="text-[10px] font-mono text-purple-400 font-normal">MAIN ACCORDS</span>
+            </span>
+          </div>
+          
+          <div class="flex flex-col items-start space-y-1.5 w-full">
+            ${accordsList.map((acc, index) => {
+              const widthPct = Math.max(45, 100 - (index * 6));
+              const style = getAccordStyle(acc);
+
+              return `
+                <div class="h-7 rounded-lg flex items-center justify-start pl-3.5 transition-all duration-300 hover:brightness-105 shadow-sm"
+                     style="width: ${widthPct}%; background-color: ${style.bg}; border: 1px solid ${style.border};">
+                  <span class="text-[11px] md:text-xs tracking-wide select-none truncate drop-shadow-sm"
+                        style="color: ${style.text}; font-weight: ${style.fontBold ? '700' : '600'};">
+                    ${escapeHTML(acc)}
+                  </span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      ` : ''}
+
     </div>
   `;
 }
