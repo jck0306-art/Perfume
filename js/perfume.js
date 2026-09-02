@@ -49,6 +49,7 @@ export function renderPerfumeCards() {
     const matchSearch = !search || 
       item.brand.toLowerCase().includes(search) || 
       item.name.toLowerCase().includes(search) || 
+      (item.store && item.store.toLowerCase().includes(search)) ||
       (item.notes && item.notes.toLowerCase().includes(search)) ||
       (item.seasons && item.seasons.some(s => s.toLowerCase().includes(search)));
     return matchCategory && matchSearch;
@@ -81,7 +82,7 @@ export function renderPerfumeCards() {
             </div>
           </div>
 
-          <!-- 태그 배지들 (다중 계절 태그 포함) -->
+          <!-- 태그 배지들 (계열, 부향률, 계절) -->
           <div class="flex flex-wrap gap-1.5 text-[11px]">
             <span class="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/30">${escapeHTML(item.category)}</span>
             <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700/60">${escapeHTML(item.concentration)}</span>
@@ -92,7 +93,7 @@ export function renderPerfumeCards() {
             `).join('')}
           </div>
 
-          <!-- 잔여량 프로그레스 바 -->
+          <!-- 잔여량 게이지 -->
           <div class="space-y-1 pt-1">
             <div class="flex justify-between text-[11px] text-slate-400">
               <span>잔여량 (${escapeHTML(item.capacity || '-')})</span>
@@ -103,7 +104,23 @@ export function renderPerfumeCards() {
             </div>
           </div>
 
-          <!-- 노트 설명 -->
+          <!-- 🌟 구매 정보 표시 (구매처 및 구매 일자) -->
+          ${(item.store || item.buyDate) ? `
+            <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-400 bg-slate-950/40 px-2.5 py-1.5 rounded-xl border border-slate-800/80">
+              ${item.store ? `
+                <span class="flex items-center gap-1 text-slate-300 font-medium truncate">
+                  <i class="fa-solid fa-bag-shopping text-purple-400 text-[10px]"></i> ${escapeHTML(item.store)}
+                </span>
+              ` : ''}
+              ${item.buyDate ? `
+                <span class="font-mono text-[10px] text-slate-500 flex items-center gap-1">
+                  <i class="fa-regular fa-calendar text-[10px]"></i> ${escapeHTML(item.buyDate)}
+                </span>
+              ` : ''}
+            </div>
+          ` : ''}
+
+          <!-- 노트 구성 -->
           ${item.notes ? `
             <div class="text-xs text-slate-400 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 font-sans">
               <span class="text-slate-500 font-semibold block text-[10px] uppercase mb-0.5">Notes</span>
@@ -111,7 +128,7 @@ export function renderPerfumeCards() {
             </div>
           ` : ''}
 
-          <!-- 시향 코멘트 -->
+          <!-- 시향 메모 -->
           ${item.memo ? `
             <p class="text-xs text-slate-300 bg-slate-950/40 p-2.5 rounded-xl border-l-2 border-purple-500 italic">
               "${escapeHTML(item.memo)}"
@@ -136,7 +153,6 @@ export function openPerfumeModal(id = null) {
   const title = document.getElementById('modal-title');
   const formId = document.getElementById('form-id');
 
-  // 계절 체크박스 전체 초기화
   document.querySelectorAll('.season-checkbox input[type="checkbox"]').forEach(cb => cb.checked = false);
 
   if (id) {
@@ -149,7 +165,6 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-category').value = item.category || '우디';
     document.getElementById('form-concentration').value = item.concentration || 'EDP';
     
-    // 선택된 계절 체크박스 활성화
     const seasons = Array.isArray(item.seasons) ? item.seasons : (item.season ? [item.season] : []);
     document.querySelectorAll('.season-checkbox input[type="checkbox"]').forEach(cb => {
       if (seasons.includes(cb.value)) cb.checked = true;
@@ -159,6 +174,11 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-remain').value = item.remain !== undefined ? item.remain : 100;
     document.getElementById('remain-val').innerText = (item.remain !== undefined ? item.remain : 100) + '%';
     document.getElementById('form-rating').value = item.rating || 5;
+    
+    // 구매 정보 로드
+    document.getElementById('form-buy-date').value = item.buyDate || '';
+    document.getElementById('form-store').value = item.store || '';
+
     document.getElementById('form-notes').value = item.notes || '';
     document.getElementById('form-memo').value = item.memo || '';
   } else {
@@ -172,6 +192,11 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-remain').value = 100;
     document.getElementById('remain-val').innerText = '100%';
     document.getElementById('form-rating').value = 5;
+    
+    // 구매 정보 초기화
+    document.getElementById('form-buy-date').value = '';
+    document.getElementById('form-store').value = '';
+
     document.getElementById('form-notes').value = '';
     document.getElementById('form-memo').value = '';
   }
@@ -193,7 +218,6 @@ export function savePerfume() {
   const category = document.getElementById('form-category').value;
   const concentration = document.getElementById('form-concentration').value;
 
-  // 체크된 계절 배열 수집
   const selectedSeasons = Array.from(document.querySelectorAll('.season-checkbox input[type="checkbox"]:checked'))
     .map(cb => cb.value);
 
@@ -210,6 +234,11 @@ export function savePerfume() {
   const capacity = document.getElementById('form-capacity').value.trim();
   const remain = Number(document.getElementById('form-remain').value);
   const rating = Number(document.getElementById('form-rating').value);
+  
+  // 구매 정보 추출
+  const buyDate = document.getElementById('form-buy-date').value;
+  const store = document.getElementById('form-store').value.trim();
+
   const notes = document.getElementById('form-notes').value.trim();
   const memo = document.getElementById('form-memo').value.trim();
 
@@ -219,7 +248,9 @@ export function savePerfume() {
       Object.assign(item, {
         brand, name, category, concentration,
         seasons: selectedSeasons,
-        capacity, remain, rating, notes, memo
+        capacity, remain, rating,
+        buyDate, store,
+        notes, memo
       });
     }
   } else {
@@ -227,7 +258,9 @@ export function savePerfume() {
       id: 'p_' + Date.now(),
       brand, name, category, concentration,
       seasons: selectedSeasons,
-      capacity, remain, rating, notes, memo
+      capacity, remain, rating,
+      buyDate, store,
+      notes, memo
     });
   }
 
