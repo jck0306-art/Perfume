@@ -135,24 +135,18 @@
       </div>
 
       <div class="grid grid-cols-2 gap-3">
+        <!-- 🌟 기존 입력 데이터 선택 or 직접 입력 토글 UI -->
         <div>
-          <label class="text-xs text-slate-400 block mb-1">향조 계열 (직접 입력 가능) *</label>
-          <input id="form-category" list="category-suggestions" type="text" placeholder="예: 마린/솔티, 레더, 우디 등" 
-            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-purple-500 focus:outline-none" />
-          <datalist id="category-suggestions">
-            <option value="우디"></option>
-            <option value="시트러스"></option>
-            <option value="플로럴"></option>
-            <option value="머스크/비누"></option>
-            <option value="그린/허벌"></option>
-            <option value="스파이시/오리엔탈"></option>
-            <option value="구르망/달달"></option>
-            <option value="아쿠아/프레시"></option>
-            <option value="마린/솔티"></option>
-            <option value="레더/가죽"></option>
-            <option value="스모키"></option>
-            <option value="알데하이드"></option>
-          </datalist>
+          <label class="text-xs text-slate-400 block mb-1">향조 계열 *</label>
+          <div class="space-y-1.5">
+            <select id="form-category-select" onchange="window.handleCategorySelectChange(this.value)" 
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:border-purple-500 focus:outline-none">
+              <!-- JS에서 기존 DB 데이터와 기본 향조를 합쳐 자동 렌더링 -->
+            </select>
+            <!-- '직접 입력' 선택 시에만 나타나는 인풋창 -->
+            <input id="form-category-custom" type="text" placeholder="새로운 향조 입력 (예: 마린/솔티, 레더)" 
+              class="w-full bg-slate-950 border border-purple-500/50 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none hidden" />
+          </div>
         </div>
         <div>
           <label class="text-xs text-slate-400 block mb-1">농도(부향률)</label>
