@@ -96,6 +96,23 @@
 
       <input type="hidden" id="form-id" />
 
+      <!-- 🖼 이미지 업로드 영역 -->
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">어코드 그래프 / 향수 캡처 이미지</label>
+        <div class="flex items-center gap-3">
+          <input id="form-file-input" type="file" accept="image/*" class="flex-1 text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer bg-slate-950 rounded-xl border border-slate-800 p-1" />
+          <button id="btn-remove-img" type="button" onclick="window.clearImagePreview()" class="hidden px-2.5 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-rose-400 rounded-xl border border-slate-700">
+            삭제
+          </button>
+        </div>
+        <input type="hidden" id="form-img-base64" />
+        
+        <!-- 이미지 미리보기 -->
+        <div id="preview-wrap" class="mt-2 hidden rounded-xl overflow-hidden border border-slate-800 bg-slate-950 p-1 flex justify-center max-h-48">
+          <img id="form-img-preview" src="" class="max-h-44 object-contain rounded-lg" alt="미리보기" />
+        </div>
+      </div>
+
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-xs text-slate-400 block mb-1">브랜드 명 *</label>
@@ -132,7 +149,7 @@
         </div>
       </div>
 
-      <!-- 계절 다중 선택 영역 -->
+      <!-- 계절 다중 선택 -->
       <div>
         <label class="text-xs text-slate-400 block mb-1.5">어울리는 계절 (다중 선택) *</label>
         <div class="grid grid-cols-4 gap-2">
@@ -176,7 +193,6 @@
         </div>
       </div>
 
-      <!-- 🌟 추가: 구매 정보 영역 (구매 일자 & 구매처) -->
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-xs text-slate-400 block mb-1">구매 일자 (선택)</label>
