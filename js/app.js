@@ -1,45 +1,24 @@
-import { processImageFile } from './storage.js';
+import { initFirebase } from './firebase.js';
 import { 
   updateStats, 
+  renderCategoryFilters,
   renderPerfumeListView, 
   selectPerfume,
   setCategoryFilter, 
   openPerfumeModal, 
   closePerfumeModal, 
-  clearImagePreview,
   savePerfume, 
   deletePerfume 
 } from './perfume.js';
 
-// 전역 바인딩
 window.setCategoryFilter = setCategoryFilter;
 window.filterPerfumes = renderPerfumeListView;
 window.selectPerfume = selectPerfume;
 window.openPerfumeModal = openPerfumeModal;
 window.closePerfumeModal = closePerfumeModal;
-window.clearImagePreview = clearImagePreview;
 window.savePerfume = savePerfume;
 window.deletePerfume = deletePerfume;
 
-// 이미지 파일 압축 선택 처리
-function setupFileInput() {
-  const fileInput = document.getElementById('form-file-input');
-  if (fileInput) {
-    fileInput.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (file) {
-        processImageFile(file, 700, base64 => {
-          document.getElementById('form-img-base64').value = base64;
-          document.getElementById('form-img-preview').src = base64;
-          document.getElementById('preview-wrap').classList.remove('hidden');
-          document.getElementById('btn-remove-img').classList.remove('hidden');
-        });
-      }
-    });
-  }
-}
-
-// 패밀리 사이트 토글
 window.toggleFamilySiteMenu = function() {
   const menu = document.getElementById('family-site-menu');
   const icon = document.getElementById('family-site-icon');
@@ -64,9 +43,12 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// 시작
-window.addEventListener('DOMContentLoaded', () => {
-  setupFileInput();
+function render() {
   updateStats();
+  renderCategoryFilters();
   renderPerfumeListView();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  initFirebase(render);
 });
