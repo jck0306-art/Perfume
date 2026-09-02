@@ -94,13 +94,11 @@ export function handleCategorySelectChange(val) {
   }
 }
 
-export function renderCategoryFilters() {
-  // 🌟 가로 버튼 나열 대신 드롭다운 셀렉트 옵션으로 생성
+// 🌟 가로 버튼 나열 대신 드롭다운 셀렉트 옵션으로 정상 생성
 export function renderCategoryFilters() {
   const selectEl = document.getElementById('category-filter-select');
   if (!selectEl) return;
 
-  // DB에 등록된 향수들에서 고유 향조 추출
   const categories = new Set();
   cloudPerfumes.forEach(p => {
     if (p.category && p.category.trim()) categories.add(p.category.trim());
@@ -115,7 +113,6 @@ export function renderCategoryFilters() {
 
     return `<option value="${escapeHTML(cat)}" ${isSelected ? 'selected' : ''}>${escapeHTML(label)}</option>`;
   }).join('');
-}
 }
 
 export function setCategoryFilter(category) {
@@ -153,10 +150,10 @@ export function renderPerfumeListView() {
     const matchSearch = !search || 
       (item.brand && item.brand.toLowerCase().includes(search)) || 
       (item.name && item.name.toLowerCase().includes(search)) || 
-      (item.category && item.category.toLowerCase().includes(search)) ||
-      (item.store && item.store.toLowerCase().includes(search)) ||
-      (item.notes && item.notes.toLowerCase().includes(search)) ||
-      (item.accords && item.accords.some(a => a.toLowerCase().includes(search))) ||
+      (item.category && item.category.toLowerCase().includes(search)) || 
+      (item.store && item.store.toLowerCase().includes(search)) || 
+      (item.notes && item.notes.toLowerCase().includes(search)) || 
+      (item.accords && item.accords.some(a => a.toLowerCase().includes(search))) || 
       (item.seasons && item.seasons.some(s => s.toLowerCase().includes(search)));
     return matchCategory && matchSearch;
   });
@@ -380,7 +377,6 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-name').value = item.name || '';
     document.getElementById('form-accords').value = Array.isArray(item.accords) ? item.accords.join(', ') : '';
     
-    // 🌟 향조 드롭다운 및 직접입력 채우기
     populateCategorySelect(item.category || '');
 
     document.getElementById('form-concentration').value = item.concentration || 'EDP';
@@ -405,7 +401,6 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-name').value = '';
     document.getElementById('form-accords').value = '';
     
-    // 🌟 새 등록 시 드롭다운 기본값
     populateCategorySelect('우디');
 
     document.getElementById('form-concentration').value = 'EDP';
@@ -435,7 +430,6 @@ export function savePerfume() {
   const name = document.getElementById('form-name').value.trim();
   const accordsRaw = document.getElementById('form-accords').value.trim();
   
-  // 🌟 향조 값 추출 (직접 입력 여부 분기)
   const selectVal = document.getElementById('form-category-select').value;
   const customVal = document.getElementById('form-category-custom').value.trim();
   let category = selectVal;
