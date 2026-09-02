@@ -4,61 +4,94 @@ import { escapeHTML } from './security.js';
 let activeCategory = 'all';
 let selectedPerfumeId = null;
 
-// 🎨 프래그런티카 특유의 산뜻하고 화사한 컬러 팔레트 (다크 배경에서도 돋보이는 톤)
+const DEFAULT_CATEGORIES = [
+  '우디', '시트러스', '플로럴', '머스크/비누', 
+  '그린/허벌', '스파이시/오리엔탈', '구르망/달달', '아쿠아/프레시', '마린/솔티', '레더'
+];
+
 function getAccordStyle(accordName) {
   const name = accordName.toLowerCase();
-
-  // 광물 / 미네랄 / 아쿠아
+  if (name.includes('짠') || name.includes('salty') || name.includes('선박') || name.includes('marine') || name.includes('해양') || name.includes('바다') || name.includes('마린')) {
+    return { bg: '#2b6cb0', text: '#ffffff', border: '#4299e1' };
+  }
   if (name.includes('광물') || name.includes('mineral')) {
     return { bg: '#5fb3b3', text: '#ffffff', border: '#7ecece' };
   }
-  // 짠내 / 소금 / salty
-  if (name.includes('짠') || name.includes('salty') || name.includes('소금')) {
-    return { bg: '#e0f7fa', text: '#006064', border: '#b2ebf2', fontBold: true };
-  }
-  // 감귤 / 시트러스 / 레몬
   if (name.includes('감귤') || name.includes('시트러스') || name.includes('citrus') || name.includes('레몬') || name.includes('오렌지') || name.includes('베르가못')) {
     return { bg: '#fff04b', text: '#422006', border: '#fef08a', fontBold: true };
   }
-  // 나무 / 우디
   if (name.includes('나무') || name.includes('우디') || name.includes('woody') || name.includes('cedar') || name.includes('sandal')) {
     return { bg: '#93582e', text: '#ffffff', border: '#b47343' };
   }
-  // 마린 / 선박 / 바다
-  if (name.includes('선박') || name.includes('marine') || name.includes('바다') || name.includes('마린') || name.includes('해양')) {
-    return { bg: '#2b6cb0', text: '#ffffff', border: '#4299e1' };
-  }
-  // 신선 / 매콤 / 스파이시
   if (name.includes('신선') || name.includes('매콤') || name.includes('spicy') || name.includes('스파이시')) {
     return { bg: '#97d159', text: '#14532d', border: '#bbf7d0', fontBold: true };
   }
-  // 허브 / 아로마틱
   if (name.includes('허브') || name.includes('herbal') || name.includes('aromatic') || name.includes('아로마')) {
     return { bg: '#86bba5', text: '#064e3b', border: '#a7f3d0', fontBold: true };
   }
-  // 이끼 / 모스
   if (name.includes('이끼') || name.includes('moss') || name.includes('earthy')) {
     return { bg: '#8fa87b', text: '#ffffff', border: '#a3be8c' };
   }
-  // 달콤 / 스위트 / 바닐라
   if (name.includes('달콤') || name.includes('sweet') || name.includes('바닐라') || name.includes('vanilla') || name.includes('구르망')) {
     return { bg: '#f87171', text: '#ffffff', border: '#fca5a5' };
   }
-  // 플로럴 / 꽃 / 장미
-  if (name.includes('플로럴') || name.includes('floral') || name.includes('향긋') || name.includes('장미') || name.includes('rose') || name.includes('화이트')) {
+  if (name.includes('플로럴') || name.includes('floral') || name.includes('향긋') || name.includes('장미') || name.includes('rose')) {
     return { bg: '#f472b6', text: '#ffffff', border: '#fbcfe8' };
   }
-  // 머스크 / 파우더리 / 비누
   if (name.includes('머스크') || name.includes('musk') || name.includes('파우더') || name.includes('비누')) {
     return { bg: '#cbd5e1', text: '#1e293b', border: '#e2e8f0', fontBold: true };
   }
-  // 레더 / 가죽
   if (name.includes('가죽') || name.includes('레더') || name.includes('leather')) {
     return { bg: '#b45309', text: '#ffffff', border: '#d97706' };
   }
-
-  // 기본값: 산뜻한 라벤더 바이올렛
   return { bg: '#a78bfa', text: '#ffffff', border: '#c4b5fd' };
+}
+
+// 🌟 기존 등록된 향조 + 기본 추천 향조 목록 취합
+function getAllKnownCategories() {
+  const catSet = new Set(DEFAULT_CATEGORIES);
+  cloudPerfumes.forEach(p => {
+    if (p.category && p.category.trim()) catSet.add(p.category.trim());
+  });
+  return Array.from(catSet);
+}
+
+// 🌟 모달 열릴 때 드롭다운 옵션 자동 채우기
+function populateCategorySelect(currentValue = '') {
+  const selectEl = document.getElementById('form-category-select');
+  const customInput = document.getElementById('form-category-custom');
+  if (!selectEl) return;
+
+  const categories = getAllKnownCategories();
+  const isCustom = currentValue && !categories.includes(currentValue);
+
+  selectEl.innerHTML = `
+    <option value="" disabled ${!currentValue ? 'selected' : ''}>향조 계열을 선택하세요</option>
+    ${categories.map(c => `<option value="${escapeHTML(c)}" ${c === currentValue ? 'selected' : ''}>${escapeHTML(c)}</option>`).join('')}
+    <option value="__custom__" ${isCustom ? 'selected' : ''}>✏️ 직접 입력하기</option>
+  `;
+
+  if (isCustom) {
+    customInput.classList.remove('hidden');
+    customInput.value = currentValue;
+  } else {
+    customInput.classList.add('hidden');
+    customInput.value = '';
+  }
+}
+
+// 드롭다운 변경 시 '직접 입력' 창 토글
+export function handleCategorySelectChange(val) {
+  const customInput = document.getElementById('form-category-custom');
+  if (!customInput) return;
+
+  if (val === '__custom__') {
+    customInput.classList.remove('hidden');
+    customInput.focus();
+  } else {
+    customInput.classList.add('hidden');
+    customInput.value = '';
+  }
 }
 
 export function renderCategoryFilters() {
@@ -215,7 +248,6 @@ export function renderPerfumeDetailView() {
 
   detailEl.innerHTML = `
     <div class="space-y-5">
-      <!-- 상단 헤더 -->
       <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-800/80 pb-4">
         <div>
           <span class="text-xs font-bold uppercase tracking-wider text-purple-400 block mb-0.5">
@@ -235,7 +267,6 @@ export function renderPerfumeDetailView() {
         </div>
       </div>
 
-      <!-- 배지 태그들 & 별점 -->
       <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
         <div class="flex flex-wrap gap-1.5 text-xs">
           <span class="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/30 font-semibold">${escapeHTML(item.category || '기타')}</span>
@@ -252,7 +283,6 @@ export function renderPerfumeDetailView() {
         </div>
       </div>
 
-      <!-- 잔여량 게이지 -->
       <div class="bg-slate-950/60 p-3.5 rounded-2xl border border-slate-800/80 space-y-1.5">
         <div class="flex justify-between text-xs text-slate-400 font-semibold">
           <span>용량 및 잔여량 (${escapeHTML(item.capacity || '미기재')})</span>
@@ -263,7 +293,6 @@ export function renderPerfumeDetailView() {
         </div>
       </div>
 
-      <!-- 구매 정보 -->
       ${(item.store || item.buyDate) ? `
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
           <div class="flex items-center gap-2 text-slate-300">
@@ -279,7 +308,6 @@ export function renderPerfumeDetailView() {
         </div>
       ` : ''}
 
-      <!-- 노트 정보 -->
       <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 space-y-1">
         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block flex items-center gap-1.5">
           <i class="fa-solid fa-layer-group text-purple-400"></i> Fragrance Notes (탑 / 미들 / 베이스)
@@ -289,7 +317,6 @@ export function renderPerfumeDetailView() {
         </p>
       </div>
 
-      <!-- 시향기 -->
       <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 space-y-1.5">
         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block flex items-center gap-1.5">
           <i class="fa-solid fa-comment-dots text-purple-400"></i> 시향기 & 착향 메모
@@ -299,7 +326,7 @@ export function renderPerfumeDetailView() {
         </p>
       </div>
 
-      <!-- 🌟 아래로 이동된 '향 노트' 색상 바 차트 영역 -->
+      <!-- 향 노트 차트 (왼쪽 정렬) -->
       ${accordsList.length > 0 ? `
         <div class="bg-slate-950/90 rounded-2xl border border-slate-800/90 p-4 md:p-5 shadow-inner space-y-3">
           <div class="text-left">
@@ -357,7 +384,10 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-brand').value = item.brand || '';
     document.getElementById('form-name').value = item.name || '';
     document.getElementById('form-accords').value = Array.isArray(item.accords) ? item.accords.join(', ') : '';
-    document.getElementById('form-category').value = item.category || '우디';
+    
+    // 🌟 향조 드롭다운 및 직접입력 채우기
+    populateCategorySelect(item.category || '');
+
     document.getElementById('form-concentration').value = item.concentration || 'EDP';
     
     const seasons = Array.isArray(item.seasons) ? item.seasons : [];
@@ -379,7 +409,10 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-brand').value = '';
     document.getElementById('form-name').value = '';
     document.getElementById('form-accords').value = '';
-    document.getElementById('form-category').value = '우디';
+    
+    // 🌟 새 등록 시 드롭다운 기본값
+    populateCategorySelect('우디');
+
     document.getElementById('form-concentration').value = 'EDP';
     document.getElementById('form-capacity').value = '';
     document.getElementById('form-remain').value = 100;
@@ -406,7 +439,15 @@ export function savePerfume() {
   const brand = document.getElementById('form-brand').value.trim();
   const name = document.getElementById('form-name').value.trim();
   const accordsRaw = document.getElementById('form-accords').value.trim();
-  const category = document.getElementById('form-category').value.trim() || '기타';
+  
+  // 🌟 향조 값 추출 (직접 입력 여부 분기)
+  const selectVal = document.getElementById('form-category-select').value;
+  const customVal = document.getElementById('form-category-custom').value.trim();
+  let category = selectVal;
+  if (selectVal === '__custom__' || !selectVal) {
+    category = customVal || '기타';
+  }
+
   const concentration = document.getElementById('form-concentration').value;
 
   const selectedSeasons = Array.from(document.querySelectorAll('.season-checkbox input[type="checkbox"]:checked'))
