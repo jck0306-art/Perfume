@@ -47,8 +47,8 @@ export function renderPerfumeCards() {
   const filtered = perfumes.filter(item => {
     const matchCategory = (activeCategory === 'all') || (item.category === activeCategory);
     const matchSearch = !search || 
-      item.brand.toLowerCase().includes(search) || 
-      item.name.toLowerCase().includes(search) || 
+      (item.brand && item.brand.toLowerCase().includes(search)) || 
+      (item.name && item.name.toLowerCase().includes(search)) || 
       (item.store && item.store.toLowerCase().includes(search)) ||
       (item.notes && item.notes.toLowerCase().includes(search)) ||
       (item.seasons && item.seasons.some(s => s.toLowerCase().includes(search)));
@@ -83,8 +83,8 @@ export function renderPerfumeCards() {
               <h3 class="text-base font-bold text-white group-hover:text-purple-300 transition">${escapeHTML(item.name)}</h3>
             </div>
             <div class="flex items-center gap-1 text-slate-500">
-              <button onclick="window.openPerfumeModal('${item.id}')" class="p-1.5 hover:text-amber-300 text-xs transition" title="수정"><i class="fa-solid fa-pen"></i></button>
-              <button onclick="window.deletePerfume('${item.id}')" class="p-1.5 hover:text-rose-400 text-xs transition" title="삭제"><i class="fa-solid fa-trash"></i></button>
+              <button onclick="window.openPerfumeModal('${escapeHTML(item.id)}')" class="p-1.5 hover:text-amber-300 text-xs transition" title="수정"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="window.deletePerfume('${escapeHTML(item.id)}')" class="p-1.5 hover:text-rose-400 text-xs transition" title="삭제"><i class="fa-solid fa-trash"></i></button>
             </div>
           </div>
 
@@ -159,13 +159,16 @@ export function openPerfumeModal(id = null) {
   const title = document.getElementById('modal-title');
   const formId = document.getElementById('form-id');
 
+  // 체크박스 및 파일 입력 초기화
   document.querySelectorAll('.season-checkbox input[type="checkbox"]').forEach(cb => cb.checked = false);
   const fileInput = document.getElementById('form-file-input');
   if (fileInput) fileInput.value = '';
 
   if (id) {
-    const item = perfumes.find(p => p.id === id);
+    const targetId = String(id);
+    const item = perfumes.find(p => String(p.id) === targetId);
     if (!item) return;
+
     title.innerHTML = `<i class="fa-solid fa-pen text-purple-400"></i> 향수 정보 수정`;
     formId.value = item.id;
     document.getElementById('form-brand').value = item.brand || '';
@@ -173,8 +176,8 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-category').value = item.category || '우디';
     document.getElementById('form-concentration').value = item.concentration || 'EDP';
     
-    // 계절 체크박스 로드
-    const seasons = Array.isArray(item.seasons) ? item.seasons : (item.season ? [item.season] : []);
+    // 계절 체크박스 매핑
+    const seasons = Array.isArray(item.seasons) ? item.seasons : [];
     document.querySelectorAll('.season-checkbox input[type="checkbox"]').forEach(cb => {
       if (seasons.includes(cb.value)) cb.checked = true;
     });
@@ -184,7 +187,6 @@ export function openPerfumeModal(id = null) {
     document.getElementById('remain-val').innerText = (item.remain !== undefined ? item.remain : 100) + '%';
     document.getElementById('form-rating').value = item.rating || 5;
     
-    // 오타 수정 부분: form-buy-date
     document.getElementById('form-buy-date').value = item.buyDate || '';
     document.getElementById('form-store').value = item.store || '';
 
@@ -215,7 +217,6 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-buy-date').value = '';
     document.getElementById('form-store').value = '';
 
-    // 이미지 초기화
     document.getElementById('form-img-base64').value = '';
     document.getElementById('preview-wrap').classList.add('hidden');
     document.getElementById('btn-remove-img').classList.add('hidden');
@@ -272,9 +273,19 @@ export function savePerfume() {
   const memo = document.getElementById('form-memo').value.trim();
 
   if (editId) {
-    const item = perfumes.find(p => p.id === editId);
-    if (item) {
-      Object.assign(item, {
+    const idx = perfumes.findIndex(p => String(p.id) === String(editId));
+    if (idx !== -1) {
+      perfumes[idx] = {
+        ...perfumes[idx],
+        brand, name, category, concentration,
+        seasons: selectedSeasons,
+        capacity, remain, rating,
+        buyDate, store, img,
+        notes, memo
+      };
+    } else {
+      perfumes.unshift({
+        id: editId,
         brand, name, category, concentration,
         seasons: selectedSeasons,
         capacity, remain, rating,
@@ -301,7 +312,7 @@ export function savePerfume() {
 
 export function deletePerfume(id) {
   if (!confirm('이 향수 아카이브를 삭제하시겠습니까?')) return;
-  perfumes = perfumes.filter(p => p.id !== id);
+  perfumes = perfumes.filter(p => String(p.id) !== String(id));
   savePerfumes(perfumes);
   updateStats();
   renderPerfumeCards();
