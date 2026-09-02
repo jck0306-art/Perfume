@@ -70,7 +70,6 @@ export function renderPerfumeCards() {
 
     return `
       <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg hover:border-purple-500/40 transition group flex flex-col justify-between">
-        <!-- 🖼 등록된 이미지(어코드 그래프 등)가 있을 경우 표시 -->
         ${item.img ? `
           <div class="w-full bg-slate-950 border-b border-slate-800 p-2 flex justify-center items-center max-h-48 overflow-hidden">
             <img src="${item.img}" class="max-h-44 object-contain rounded-lg group-hover:scale-105 transition duration-300" alt="어코드/향수 이미지" />
@@ -111,7 +110,7 @@ export function renderPerfumeCards() {
             </div>
           </div>
 
-          <!-- 구매 정보 (구매처 및 구매 일자) -->
+          <!-- 구매 정보 -->
           ${(item.store || item.buyDate) ? `
             <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-400 bg-slate-950/40 px-2.5 py-1.5 rounded-xl border border-slate-800/80">
               ${item.store ? `
@@ -161,7 +160,8 @@ export function openPerfumeModal(id = null) {
   const formId = document.getElementById('form-id');
 
   document.querySelectorAll('.season-checkbox input[type="checkbox"]').forEach(cb => cb.checked = false);
-  document.getElementById('form-file-input').value = '';
+  const fileInput = document.getElementById('form-file-input');
+  if (fileInput) fileInput.value = '';
 
   if (id) {
     const item = perfumes.find(p => p.id === id);
@@ -173,6 +173,7 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-category').value = item.category || '우디';
     document.getElementById('form-concentration').value = item.concentration || 'EDP';
     
+    // 계절 체크박스 로드
     const seasons = Array.isArray(item.seasons) ? item.seasons : (item.season ? [item.season] : []);
     document.querySelectorAll('.season-checkbox input[type="checkbox"]').forEach(cb => {
       if (seasons.includes(cb.value)) cb.checked = true;
@@ -183,7 +184,8 @@ export function openPerfumeModal(id = null) {
     document.getElementById('remain-val').innerText = (item.remain !== undefined ? item.remain : 100) + '%';
     document.getElementById('form-rating').value = item.rating || 5;
     
-    document.getElementById('form-buyDate').value = item.buyDate || '';
+    // 오타 수정 부분: form-buy-date
+    document.getElementById('form-buy-date').value = item.buyDate || '';
     document.getElementById('form-store').value = item.store || '';
 
     // 이미지 로드
@@ -234,7 +236,8 @@ export function closePerfumeModal() {
 
 export function clearImagePreview() {
   document.getElementById('form-img-base64').value = '';
-  document.getElementById('form-file-input').value = '';
+  const fileIn = document.getElementById('form-file-input');
+  if (fileIn) fileIn.value = '';
   document.getElementById('preview-wrap').classList.add('hidden');
   document.getElementById('btn-remove-img').classList.add('hidden');
 }
