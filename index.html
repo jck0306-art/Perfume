@@ -11,38 +11,53 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <script type="module" src="js/app.js?v=8"></script>
+  <script type="module" src="js/app.js?v=9"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-16">
 
   <!-- 상단 헤더 -->
   <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 md:px-8 py-3.5">
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 text-lg">
           <i class="fa-solid fa-wand-magic-sparkles"></i>
         </div>
         <div>
           <h1 class="text-base md:text-lg font-bold text-white flex items-center gap-2">
-            ScentTrack <span class="text-xs font-normal text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">Perfume Archive</span>
+            ScentTrack <span class="text-xs font-normal text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">Perfume & VIP</span>
           </h1>
         </div>
       </div>
+
+      <!-- 🌟 상단 뷰 전환 탭 (향수 컬렉션 vs VIP 멤버십) -->
+      <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <button id="tab-btn-perfumes" onclick="window.switchMainTab('perfumes')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-purple-600 text-white shadow-sm">
+          <i class="fa-solid fa-spray-can"></i> 향수 컬렉션
+        </button>
+        <button id="tab-btn-vip" onclick="window.switchMainTab('vip')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white">
+          <i class="fa-solid fa-crown text-amber-400"></i> VIP 멤버십
+          <span id="vip-header-badge" class="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-mono">0</span>
+        </button>
+      </div>
+
       <div class="flex items-center gap-2">
-        <!-- ☁️ 클라우드 DB 동기화 상태 표시 -->
         <span id="cloud-status" class="text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 font-mono">
           <i class="fa-solid fa-cloud"></i> DB 연결 중...
         </span>
-        <button onclick="window.openPerfumeModal()" class="text-xs md:text-sm bg-purple-600 hover:bg-purple-500 text-white font-semibold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-purple-600/20">
+        <!-- 향수 등록 버튼 -->
+        <button id="btn-open-perfume-add" onclick="window.openPerfumeModal()" class="text-xs md:text-sm bg-purple-600 hover:bg-purple-500 text-white font-semibold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-purple-600/20">
           <i class="fa-solid fa-plus text-xs"></i> 향수 등록
+        </button>
+        <!-- VIP 등록 버튼 (VIP 탭 활성화 시에만 표시) -->
+        <button id="btn-open-vip-add" onclick="window.openVipModal()" class="hidden text-xs md:text-sm bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-amber-500/20">
+          <i class="fa-solid fa-crown text-xs"></i> VIP 브랜드 등록
         </button>
       </div>
     </div>
   </header>
 
-  <!-- 메인 본문 -->
-  <main class="max-w-6xl mx-auto p-4 md:p-8 space-y-5">
-
+  <!-- ================= [뷰 1] 기존 향수 컬렉션 ================= -->
+  <main id="section-perfume-view" class="max-w-6xl mx-auto p-4 md:p-8 space-y-5">
     <!-- 통계 카드 -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4">
@@ -71,7 +86,7 @@
       </div>
     </div>
 
-    <!-- 검색 및 필터 (드롭다운 방식) -->
+    <!-- 검색 및 필터 -->
     <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-3.5 flex flex-col sm:flex-row gap-3 items-center justify-between">
       <div class="relative w-full sm:flex-1">
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
@@ -79,14 +94,11 @@
           class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs md:text-sm text-white focus:outline-none focus:border-purple-500 placeholder-slate-500" />
       </div>
 
-      <!-- 🌟 가로 나열 대신 드롭다운 선택창으로 정돈 -->
       <div class="w-full sm:w-auto flex items-center gap-2">
         <select id="category-filter-select" onchange="window.setCategoryFilter(this.value)"
           class="w-full sm:w-48 bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-purple-500 cursor-pointer font-medium">
-          <!-- JS에서 향조 계열 데이터로 옵션 자동 생성 -->
         </select>
       </div>
-    </div>
     </div>
 
     <!-- Master-Detail 뷰 -->
@@ -107,7 +119,40 @@
     </div>
   </main>
 
-  <!-- 향수 등록/수정 모달 -->
+  <!-- ================= [뷰 2] 🌟 VIP 멤버십 관리 뷰 (신설) ================= -->
+  <main id="section-vip-view" class="hidden max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+    <!-- VIP 상단 요약 배너 -->
+    <div class="bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-slate-900 border border-amber-500/30 rounded-3xl p-5 md:p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+          VIP Brand Lounge
+        </span>
+        <h2 class="text-xl md:text-2xl font-black text-white mt-1.5 flex items-center gap-2">
+          <i class="fa-solid fa-crown text-amber-400"></i> 뷰티 & 프래그런스 VIP 멤버십 관리
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">내가 등록되어 있는 브랜드 등급, 마일리지/포인트, 생일 선물 및 연간 VIP 바우처를 관리하세요.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="bg-slate-900/80 px-4 py-2.5 rounded-2xl border border-slate-800 text-center">
+          <span class="text-[10px] text-slate-400 block">등록 브랜드</span>
+          <strong id="vip-stat-count" class="text-lg font-mono font-bold text-amber-400">0</strong>
+        </div>
+        <div class="bg-slate-900/80 px-4 py-2.5 rounded-2xl border border-slate-800 text-center">
+          <span class="text-[10px] text-slate-400 block">선물 미수령</span>
+          <strong id="vip-stat-pending-gifts" class="text-lg font-mono font-bold text-rose-400">0</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIP 브랜드 카드 그리드 -->
+    <div id="vip-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- JS 렌더링 -->
+    </div>
+  </main>
+
+  <!-- ================= 모달 모음 ================= -->
+
+  <!-- 1. 향수 등록/수정 모달 -->
   <div id="perfume-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50 overflow-y-auto">
     <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 border border-slate-800 shadow-2xl space-y-4 my-8">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -132,7 +177,6 @@
         </div>
       </div>
 
-      <!-- 🌟 '향 노트' 입력란 -->
       <div>
         <div class="flex justify-between items-center mb-1">
           <label class="text-xs text-slate-400 block">향 노트 (쉼표로 구분)</label>
@@ -142,15 +186,12 @@
       </div>
 
       <div class="grid grid-cols-2 gap-3">
-        <!-- 🌟 기존 입력 데이터 선택 or 직접 입력 토글 UI -->
         <div>
           <label class="text-xs text-slate-400 block mb-1">향조 계열 *</label>
           <div class="space-y-1.5">
             <select id="form-category-select" onchange="window.handleCategorySelectChange(this.value)" 
               class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:border-purple-500 focus:outline-none">
-              <!-- JS에서 기존 DB 데이터와 기본 향조를 합쳐 자동 렌더링 -->
             </select>
-            <!-- '직접 입력' 선택 시에만 나타나는 인풋창 -->
             <input id="form-category-custom" type="text" placeholder="새로운 향조 입력 (예: 마린/솔티, 레더)" 
               class="w-full bg-slate-950 border border-purple-500/50 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none hidden" />
           </div>
@@ -166,7 +207,6 @@
         </div>
       </div>
 
-      <!-- 계절 다중 선택 -->
       <div>
         <label class="text-xs text-slate-400 block mb-1.5">어울리는 계절 (다중 선택) *</label>
         <div class="grid grid-cols-4 gap-2">
@@ -238,7 +278,90 @@
     </div>
   </div>
 
-  <!-- 패밀리 사이트 퀵 네비게이터 -->
+  <!-- 2. 👑 VIP 멤버십 등록/수정 모달 (신설) -->
+  <div id="vip-modal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50 overflow-y-auto">
+    <div class="bg-slate-900 rounded-2xl max-w-md w-full p-6 border border-slate-800 shadow-2xl space-y-4 my-8">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 id="vip-modal-title" class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-crown text-amber-400"></i> VIP 멤버십 브랜드 등록
+        </h3>
+        <button onclick="window.closeVipModal()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <input type="hidden" id="form-vip-id" />
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">브랜드 명 *</label>
+          <input id="form-vip-brand" type="text" placeholder="예: 조 말론, 딥티크, 샤넬" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">내 멤버십 등급 *</label>
+          <input id="form-vip-tier" type="text" placeholder="예: VIP, 블랙, 플래티넘" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-amber-300 font-bold focus:border-amber-400 focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">주 이용 매장/백화점</label>
+          <input id="form-vip-store" type="text" placeholder="예: 신세계 강남점, 롯데 본점" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">등급 유효/갱신일</label>
+          <input id="form-vip-valid-date" type="text" placeholder="예: 2026-12-31 까지" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none font-mono" />
+        </div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">적립 포인트 / 잔여 마일리지</label>
+        <input id="form-vip-points" type="text" placeholder="예: 45,000P (2026년 말 소멸)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">상시 VIP 혜택 (할인율, 무료샘플, 각인 등)</label>
+        <textarea id="form-vip-benefits" rows="2" placeholder="예: 상시 5% 할인, 무료 인그레이빙(각인) 서비스, 신제품 프리 시향권" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"></textarea>
+      </div>
+
+      <!-- 생일 선물 & 정기 바우처 수령 관리 -->
+      <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 space-y-2">
+        <span class="text-[11px] font-bold text-amber-400 block flex items-center gap-1.5">
+          <i class="fa-solid fa-gift"></i> 연간 선물 및 혜택 수령 체크
+        </span>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[11px] text-slate-400 block mb-0.5">올해 생일 선물</label>
+            <input id="form-vip-gift-desc" type="text" placeholder="미니어처 캔들 세트" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none mb-1" />
+            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+              <input id="form-vip-gift-received" type="checkbox" class="accent-amber-400 w-3.5 h-3.5" />
+              <span>수령 완료</span>
+            </label>
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400 block mb-0.5">연간/기념일 바우처</label>
+            <input id="form-vip-voucher-desc" type="text" placeholder="1만원 상품권, 스페셜 키트" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none mb-1" />
+            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+              <input id="form-vip-voucher-received" type="checkbox" class="accent-amber-400 w-3.5 h-3.5" />
+              <span>사용/수령 완료</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">담당 셀러 / 비고 메모</label>
+        <input id="form-vip-memo" type="text" placeholder="예: 신세계 강남 김매니저님 (친절하심), 10월 행사 초대 예정" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+        <button onclick="window.closeVipModal()" class="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">취소</button>
+        <button onclick="window.saveVipItem()" class="px-5 py-2 text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition shadow">저장하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 패밀리 사이트 퀵 네비게이터 플로팅 UI -->
   <div class="fixed bottom-6 right-6 z-50">
     <div id="family-site-menu" class="hidden mb-3 w-52 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-2xl shadow-2xl p-2 space-y-1 transition-all">
       <div class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800/80 mb-1">
