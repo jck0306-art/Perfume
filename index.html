@@ -64,7 +64,7 @@
     <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
       <div class="relative w-full md:w-80">
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-        <input id="search-input" oninput="window.filterPerfumes()" type="text" placeholder="브랜드, 향수명, 노트 검색..." 
+        <input id="search-input" oninput="window.filterPerfumes()" type="text" placeholder="브랜드, 향수명, 구매처, 노트 검색..." 
           class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs md:text-sm text-white focus:outline-none focus:border-purple-500 placeholder-slate-500" />
       </div>
 
@@ -132,9 +132,9 @@
         </div>
       </div>
 
-      <!-- 🌟 계절 다중 선택 영역 (1개 이상 선택 가능) -->
+      <!-- 계절 다중 선택 영역 -->
       <div>
-        <label class="text-xs text-slate-400 block mb-1.5">어울리는 계절 (다중 선택 가능) *</label>
+        <label class="text-xs text-slate-400 block mb-1.5">어울리는 계절 (다중 선택) *</label>
         <div class="grid grid-cols-4 gap-2">
           <label class="season-checkbox flex items-center justify-center gap-1.5 p-2 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer select-none text-xs text-slate-300 hover:border-slate-700">
             <input type="checkbox" value="봄" class="accent-purple-500 w-3.5 h-3.5" />
@@ -176,6 +176,18 @@
         </div>
       </div>
 
+      <!-- 🌟 추가: 구매 정보 영역 (구매 일자 & 구매처) -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">구매 일자 (선택)</label>
+          <input id="form-buy-date" type="date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none font-mono" />
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">구매처 (선택)</label>
+          <input id="form-store" type="text" placeholder="예: 신세계 강남, 면세점, 직구" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
+        </div>
+      </div>
+
       <div>
         <label class="text-xs text-slate-400 block mb-1">노트 구성 (탑 / 미들 / 베이스)</label>
         <input id="form-notes" type="text" placeholder="예: 베르가못 / 아이리스, 바이올렛 / 샌달우드, 머스크" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
@@ -183,7 +195,7 @@
 
       <div>
         <label class="text-xs text-slate-400 block mb-1">시향 메모 & 착향 후기</label>
-        <textarea id="form-memo" rows="3" placeholder="첫 분사 시 느낌, 지속력, 어울리는 룩 등을 기록하세요." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:border-purple-500 focus:outline-none"></textarea>
+        <textarea id="form-memo" rows="3" placeholder="첫 분사 시 느낌, 잔향 지속력, 어울리는 룩 등을 기록하세요." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:border-purple-500 focus:outline-none"></textarea>
       </div>
 
       <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
@@ -193,7 +205,7 @@
     </div>
   </div>
 
-  <!-- 🌐 패밀리 사이트 퀵 네비게이터 플로팅 UI -->
+  <!-- 패밀리 사이트 퀵 네비게이터 -->
   <div class="fixed bottom-6 right-6 z-50">
     <div id="family-site-menu" class="hidden mb-3 w-52 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-2xl shadow-2xl p-2 space-y-1 transition-all">
       <div class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800/80 mb-1">
