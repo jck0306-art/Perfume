@@ -7,6 +7,7 @@ import {
   setCategoryFilter, 
   openPerfumeModal, 
   closePerfumeModal, 
+  handleCategorySelectChange,
   savePerfume, 
   deletePerfume 
 } from './perfume.js';
@@ -16,6 +17,7 @@ window.filterPerfumes = renderPerfumeListView;
 window.selectPerfume = selectPerfume;
 window.openPerfumeModal = openPerfumeModal;
 window.closePerfumeModal = closePerfumeModal;
+window.handleCategorySelectChange = handleCategorySelectChange;
 window.savePerfume = savePerfume;
 window.deletePerfume = deletePerfume;
 
