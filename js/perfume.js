@@ -193,6 +193,7 @@ export function renderPerfumeDetailView() {
 
   detailEl.innerHTML = `
     <div class="space-y-5">
+      <!-- 상단 헤더 -->
       <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-800/80 pb-4">
         <div>
           <span class="text-xs font-bold uppercase tracking-wider text-purple-400 block mb-0.5">
@@ -212,23 +213,26 @@ export function renderPerfumeDetailView() {
         </div>
       </div>
 
-      <!-- 어코드 차트 -->
+      <!-- 🌟 향 노트 (왼쪽 정렬된 프래그런티카 스타일 차트) -->
       ${accordsList.length > 0 ? `
         <div class="bg-slate-950/90 rounded-2xl border border-slate-800/90 p-4 md:p-5 shadow-inner">
-          <div class="text-center mb-3">
-            <span class="text-xs font-bold uppercase tracking-widest text-slate-400">
-              주요 협정 <span class="text-[10px] font-mono text-purple-400 font-normal">MAIN ACCORDS</span>
+          <div class="mb-3 text-left">
+            <span class="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-bars-staggered text-purple-400 text-[11px]"></i>
+              향 노트 <span class="text-[10px] font-mono text-purple-400 font-normal">MAIN ACCORDS</span>
             </span>
           </div>
-          <div class="flex flex-col items-center space-y-1.5 max-w-md mx-auto">
+          
+          <!-- 왼쪽 정렬 컨테이너 (items-start) -->
+          <div class="flex flex-col items-start space-y-1.5 w-full">
             ${accordsList.map((acc, index) => {
-              const widthPct = Math.max(48, 100 - (index * 6));
+              const widthPct = Math.max(45, 100 - (index * 6));
               const style = getAccordStyle(acc);
 
               return `
-                <div class="h-7 rounded-lg flex items-center justify-center transition-all duration-300 hover:brightness-110 shadow-sm"
+                <div class="h-7 rounded-lg flex items-center justify-start pl-3.5 transition-all duration-300 hover:brightness-110 shadow-sm"
                      style="width: ${widthPct}%; background-color: ${style.bg}; border: 1px solid ${style.border};">
-                  <span class="text-[11px] md:text-xs tracking-wide select-none"
+                  <span class="text-[11px] md:text-xs tracking-wide select-none truncate"
                         style="color: ${style.text}; font-weight: ${style.fontBold ? '700' : '600'};">
                     ${escapeHTML(acc)}
                   </span>
@@ -239,7 +243,7 @@ export function renderPerfumeDetailView() {
         </div>
       ` : ''}
 
-      <!-- 배지 태그들 -->
+      <!-- 배지 태그들 & 별점 -->
       <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
         <div class="flex flex-wrap gap-1.5 text-xs">
           <span class="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/30 font-semibold">${escapeHTML(item.category || '기타')}</span>
