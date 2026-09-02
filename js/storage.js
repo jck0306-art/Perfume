@@ -35,16 +35,42 @@ export const DEFAULT_ITEMS = [
   }
 ];
 
+// 기존의 다양한 계절 표기('사계절', '봄/가을' 등)를 체크박스 배열로 완벽 정규화
+function normalizeSeasons(rawSeasons, rawSeason) {
+  let list = [];
+  if (Array.isArray(rawSeasons)) {
+    list = rawSeasons;
+  } else if (rawSeason) {
+    list = [rawSeason];
+  } else {
+    list = ['사계절'];
+  }
+
+  const set = new Set();
+  list.forEach(s => {
+    if (typeof s !== 'string') return;
+    if (s.includes('사계절')) {
+      set.add('봄'); set.add('여름'); set.add('가을'); set.add('겨울');
+    }
+    if (s.includes('봄')) set.add('봄');
+    if (s.includes('여름')) set.add('여름');
+    if (s.includes('가을')) set.add('가을');
+    if (s.includes('겨울')) set.add('겨울');
+  });
+
+  if (set.size === 0) set.add('봄');
+  return Array.from(set);
+}
+
 export function loadPerfumes() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return DEFAULT_ITEMS;
   try {
     const parsed = JSON.parse(raw);
-    return parsed.map(item => ({
+    return parsed.map((item, idx) => ({
       ...item,
-      seasons: Array.isArray(item.seasons) 
-        ? item.seasons 
-        : (item.season ? [item.season] : ['사계절']),
+      id: item.id ? String(item.id) : `p_${Date.now()}_${idx}`,
+      seasons: normalizeSeasons(item.seasons, item.season),
       buyDate: item.buyDate || '',
       store: item.store || '',
       img: item.img || ''
@@ -59,7 +85,7 @@ export function savePerfumes(list) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
-// 🖼 이미지 리사이즈 및 Base64 변환 함수
+// 이미지 리사이즈 및 Base64 변환
 export function processImageFile(file, maxWidth, callback) {
   if (!file) return callback('');
   const reader = new FileReader();
