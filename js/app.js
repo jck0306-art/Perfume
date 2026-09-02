@@ -1,7 +1,8 @@
 import { processImageFile } from './storage.js';
 import { 
   updateStats, 
-  renderPerfumeCards, 
+  renderPerfumeListView, 
+  selectPerfume,
   setCategoryFilter, 
   openPerfumeModal, 
   closePerfumeModal, 
@@ -10,16 +11,17 @@ import {
   deletePerfume 
 } from './perfume.js';
 
-// 전역 이벤트 바인딩
+// 전역 바인딩
 window.setCategoryFilter = setCategoryFilter;
-window.filterPerfumes = renderPerfumeCards;
+window.filterPerfumes = renderPerfumeListView;
+window.selectPerfume = selectPerfume;
 window.openPerfumeModal = openPerfumeModal;
 window.closePerfumeModal = closePerfumeModal;
 window.clearImagePreview = clearImagePreview;
 window.savePerfume = savePerfume;
 window.deletePerfume = deletePerfume;
 
-// 이미지 파일 선택 이벤트 처리 (최대 폭 700px로 압축)
+// 이미지 파일 압축 선택 처리
 function setupFileInput() {
   const fileInput = document.getElementById('form-file-input');
   if (fileInput) {
@@ -62,9 +64,9 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// 시작 시 렌더링
+// 시작
 window.addEventListener('DOMContentLoaded', () => {
   setupFileInput();
   updateStats();
-  renderPerfumeCards();
+  renderPerfumeListView();
 });
