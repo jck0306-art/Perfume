@@ -69,8 +69,15 @@ export function renderPerfumeCards() {
     const seasonsList = Array.isArray(item.seasons) && item.seasons.length > 0 ? item.seasons : ['사계절'];
 
     return `
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg hover:border-purple-500/40 transition group flex flex-col justify-between">
-        <div class="space-y-3">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg hover:border-purple-500/40 transition group flex flex-col justify-between">
+        <!-- 🖼 등록된 이미지(어코드 그래프 등)가 있을 경우 표시 -->
+        ${item.img ? `
+          <div class="w-full bg-slate-950 border-b border-slate-800 p-2 flex justify-center items-center max-h-48 overflow-hidden">
+            <img src="${item.img}" class="max-h-44 object-contain rounded-lg group-hover:scale-105 transition duration-300" alt="어코드/향수 이미지" />
+          </div>
+        ` : ''}
+
+        <div class="p-5 space-y-3">
           <div class="flex justify-between items-start">
             <div>
               <span class="text-[11px] font-bold uppercase tracking-wider text-purple-400 block">${escapeHTML(item.brand)}</span>
@@ -82,7 +89,7 @@ export function renderPerfumeCards() {
             </div>
           </div>
 
-          <!-- 태그 배지들 (계열, 부향률, 계절) -->
+          <!-- 태그 배지들 -->
           <div class="flex flex-wrap gap-1.5 text-[11px]">
             <span class="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/30">${escapeHTML(item.category)}</span>
             <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700/60">${escapeHTML(item.concentration)}</span>
@@ -104,7 +111,7 @@ export function renderPerfumeCards() {
             </div>
           </div>
 
-          <!-- 🌟 구매 정보 표시 (구매처 및 구매 일자) -->
+          <!-- 구매 정보 (구매처 및 구매 일자) -->
           ${(item.store || item.buyDate) ? `
             <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-400 bg-slate-950/40 px-2.5 py-1.5 rounded-xl border border-slate-800/80">
               ${item.store ? `
@@ -137,7 +144,7 @@ export function renderPerfumeCards() {
         </div>
 
         <!-- 별점 푸터 -->
-        <div class="pt-4 mt-3 border-t border-slate-800/80 flex items-center justify-between">
+        <div class="px-5 py-3 border-t border-slate-800/80 flex items-center justify-between">
           <div class="text-amber-400 text-xs tracking-wider">
             ${'★'.repeat(Number(item.rating))}${'☆'.repeat(5 - Number(item.rating))}
           </div>
@@ -154,6 +161,7 @@ export function openPerfumeModal(id = null) {
   const formId = document.getElementById('form-id');
 
   document.querySelectorAll('.season-checkbox input[type="checkbox"]').forEach(cb => cb.checked = false);
+  document.getElementById('form-file-input').value = '';
 
   if (id) {
     const item = perfumes.find(p => p.id === id);
@@ -175,9 +183,19 @@ export function openPerfumeModal(id = null) {
     document.getElementById('remain-val').innerText = (item.remain !== undefined ? item.remain : 100) + '%';
     document.getElementById('form-rating').value = item.rating || 5;
     
-    // 구매 정보 로드
-    document.getElementById('form-buy-date').value = item.buyDate || '';
+    document.getElementById('form-buyDate').value = item.buyDate || '';
     document.getElementById('form-store').value = item.store || '';
+
+    // 이미지 로드
+    document.getElementById('form-img-base64').value = item.img || '';
+    if (item.img) {
+      document.getElementById('form-img-preview').src = item.img;
+      document.getElementById('preview-wrap').classList.remove('hidden');
+      document.getElementById('btn-remove-img').classList.remove('hidden');
+    } else {
+      document.getElementById('preview-wrap').classList.add('hidden');
+      document.getElementById('btn-remove-img').classList.add('hidden');
+    }
 
     document.getElementById('form-notes').value = item.notes || '';
     document.getElementById('form-memo').value = item.memo || '';
@@ -192,10 +210,13 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-remain').value = 100;
     document.getElementById('remain-val').innerText = '100%';
     document.getElementById('form-rating').value = 5;
-    
-    // 구매 정보 초기화
     document.getElementById('form-buy-date').value = '';
     document.getElementById('form-store').value = '';
+
+    // 이미지 초기화
+    document.getElementById('form-img-base64').value = '';
+    document.getElementById('preview-wrap').classList.add('hidden');
+    document.getElementById('btn-remove-img').classList.add('hidden');
 
     document.getElementById('form-notes').value = '';
     document.getElementById('form-memo').value = '';
@@ -209,6 +230,13 @@ export function closePerfumeModal() {
   const modal = document.getElementById('perfume-modal');
   modal.classList.add('hidden');
   modal.classList.remove('flex');
+}
+
+export function clearImagePreview() {
+  document.getElementById('form-img-base64').value = '';
+  document.getElementById('form-file-input').value = '';
+  document.getElementById('preview-wrap').classList.add('hidden');
+  document.getElementById('btn-remove-img').classList.add('hidden');
 }
 
 export function savePerfume() {
@@ -234,11 +262,9 @@ export function savePerfume() {
   const capacity = document.getElementById('form-capacity').value.trim();
   const remain = Number(document.getElementById('form-remain').value);
   const rating = Number(document.getElementById('form-rating').value);
-  
-  // 구매 정보 추출
   const buyDate = document.getElementById('form-buy-date').value;
   const store = document.getElementById('form-store').value.trim();
-
+  const img = document.getElementById('form-img-base64').value;
   const notes = document.getElementById('form-notes').value.trim();
   const memo = document.getElementById('form-memo').value.trim();
 
@@ -249,7 +275,7 @@ export function savePerfume() {
         brand, name, category, concentration,
         seasons: selectedSeasons,
         capacity, remain, rating,
-        buyDate, store,
+        buyDate, store, img,
         notes, memo
       });
     }
@@ -259,7 +285,7 @@ export function savePerfume() {
       brand, name, category, concentration,
       seasons: selectedSeasons,
       capacity, remain, rating,
-      buyDate, store,
+      buyDate, store, img,
       notes, memo
     });
   }
