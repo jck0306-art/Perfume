@@ -29,6 +29,10 @@ export const DEFAULT_PERFUMES = [
 let db = null;
 let isFirebaseReady = false;
 
+// 브라우저 로컬 캐시 확인 (기존 scent_archive_v1 또는 scent_cloud_data_v1 복구)
+const cached = localStorage.getItem('scent_cloud_data_v1') || localStorage.getItem('scent_archive_v1');
+export let cloudPerfumes = cached ? JSON.parse(cached) : DEFAULT_PERFUMES;
+
 if (window.firebase) {
   try {
     if (!firebase.apps.length) {
@@ -41,13 +45,11 @@ if (window.firebase) {
   }
 }
 
-export let cloudPerfumes = JSON.parse(localStorage.getItem('scent_cloud_data_v1')) || DEFAULT_PERFUMES;
-
 function normalizeItem(item, idx) {
   return {
     ...item,
     id: item.id ? String(item.id) : `p_${Date.now()}_${idx}`,
-    accords: Array.isArray(item.accords) ? item.accords : (item.accords ? String(item.accords).split(',').map(s=>s.trim()).filter(Boolean) : []),
+    accords: Array.isArray(item.accords) ? item.accords : (item.accords ? String(item.accords).split(',').map(s => s.trim()).filter(Boolean) : []),
     seasons: Array.isArray(item.seasons) ? item.seasons : ['사계절'],
     buyDate: item.buyDate || '',
     store: item.store || ''
@@ -57,15 +59,36 @@ function normalizeItem(item, idx) {
 export function initFirebase(onDataUpdate) {
   cloudPerfumes = cloudPerfumes.map(normalizeItem);
 
+  // 1. 대기하지 않고 로컬/캐시 데이터로 화면 즉시 1차 렌더링
+  onDataUpdate();
+
   if (isFirebaseReady) {
+    let hasResponded = false;
+
+    // 4초 동안 응답이 없으면 규칙/네트워크 문제로 간주하고 로컬 모드로 전환
+    const timer = setTimeout(() => {
+      if (!hasResponded) {
+        const statusEl = document.getElementById('cloud-status');
+        if (statusEl) {
+          statusEl.innerHTML = '<i class="fa-solid fa-floppy-disk text-amber-400"></i> 로컬 저장 모드';
+          statusEl.className = "text-[10px] px-2.5 py-1 rounded-full bg-slate-800 text-amber-300 border border-slate-700 flex items-center gap-1.5 font-mono";
+        }
+      }
+    }, 4000);
+
     db.collection("perfume_archive").doc("user_collection").onSnapshot((docSnap) => {
+      hasResponded = true;
+      clearTimeout(timer);
+
       if (docSnap.exists) {
         const data = docSnap.data();
-        if (Array.isArray(data.items)) {
+        if (Array.isArray(data.items) && data.items.length > 0) {
           cloudPerfumes = data.items.map(normalizeItem);
+          localStorage.setItem('scent_cloud_data_v1', JSON.stringify(cloudPerfumes));
         }
       } else {
-        db.collection("perfume_archive").doc("user_collection").set({ items: DEFAULT_PERFUMES });
+        // DB 문서가 비어있으면 현재 로컬 데이터로 초기화 저장
+        db.collection("perfume_archive").doc("user_collection").set({ items: cloudPerfumes });
       }
 
       const statusEl = document.getElementById('cloud-status');
@@ -75,16 +98,21 @@ export function initFirebase(onDataUpdate) {
       }
       onDataUpdate();
     }, (error) => {
-      console.error("Firestore Error:", error);
+      hasResponded = true;
+      clearTimeout(timer);
+      console.error("Firestore Snapshot Error:", error);
       const statusEl = document.getElementById('cloud-status');
-      if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> DB 연결 오류';
+      if (statusEl) {
+        statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> DB 권한 오류 (로컬 동작)';
+        statusEl.className = "text-[10px] px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/30 flex items-center gap-1.5 font-mono";
+      }
       onDataUpdate();
     });
   } else {
     const statusEl = document.getElementById('cloud-status');
     if (statusEl) {
-      statusEl.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 로컬 모드';
-      statusEl.className = "text-[10px] px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1.5 font-mono";
+      statusEl.innerHTML = '<i class="fa-solid fa-floppy-disk text-slate-400"></i> 로컬 저장 모드';
+      statusEl.className = "text-[10px] px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1.5 font-mono";
     }
     onDataUpdate();
   }
@@ -95,7 +123,7 @@ export async function syncPerfumes(onRender) {
   localStorage.setItem('scent_cloud_data_v1', JSON.stringify(cloudPerfumes));
 
   const statusEl = document.getElementById('cloud-status');
-  if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin text-amber-400"></i> 저장 중...';
+  if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin text-amber-400"></i> 동기화 중...';
 
   if (isFirebaseReady) {
     try {
@@ -105,10 +133,12 @@ export async function syncPerfumes(onRender) {
       }
     } catch (e) {
       console.error("DB Save Error:", e);
-      if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> 저장 오류';
+      if (statusEl) {
+        statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> 저장 권한 오류 (로컬 보관)';
+      }
     }
   } else {
-    if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 로컬 저장됨';
+    if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 로컬 저장 완료';
   }
 
   if (onRender) onRender();
