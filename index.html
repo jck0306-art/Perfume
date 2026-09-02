@@ -6,7 +6,12 @@
   <title>향수 아카이브 (ScentTrack)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <script type="module" src="js/app.js?v=5"></script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script type="module" src="js/app.js?v=7"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-16">
 
@@ -17,11 +22,17 @@
         <div class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 text-lg">
           <i class="fa-solid fa-wand-magic-sparkles"></i>
         </div>
-        <h1 class="text-base md:text-lg font-bold text-white flex items-center gap-2">
-          ScentTrack <span class="text-xs font-normal text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">Perfume Archive</span>
-        </h1>
+        <div>
+          <h1 class="text-base md:text-lg font-bold text-white flex items-center gap-2">
+            ScentTrack <span class="text-xs font-normal text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">Perfume Archive</span>
+          </h1>
+        </div>
       </div>
       <div class="flex items-center gap-2">
+        <!-- ☁️ 클라우드 DB 동기화 상태 표시 -->
+        <span id="cloud-status" class="text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 font-mono">
+          <i class="fa-solid fa-cloud"></i> DB 연결 중...
+        </span>
         <button onclick="window.openPerfumeModal()" class="text-xs md:text-sm bg-purple-600 hover:bg-purple-500 text-white font-semibold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-purple-600/20">
           <i class="fa-solid fa-plus text-xs"></i> 향수 등록
         </button>
@@ -64,23 +75,15 @@
     <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-3.5 flex flex-col md:flex-row gap-3 items-center justify-between">
       <div class="relative w-full md:w-80">
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-        <input id="search-input" oninput="window.filterPerfumes()" type="text" placeholder="브랜드, 향수명, 구매처, 어코드 검색..." 
+        <input id="search-input" oninput="window.filterPerfumes()" type="text" placeholder="브랜드, 향수명, 향조, 노트 검색..." 
           class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs md:text-sm text-white focus:outline-none focus:border-purple-500 placeholder-slate-500" />
       </div>
 
-      <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-        <button onclick="window.setCategoryFilter('all')" class="filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-purple-600 text-white" data-type="all">전체</button>
-        <button onclick="window.setCategoryFilter('우디')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-slate-900 text-slate-400 hover:text-white border border-slate-800" data-type="우디">우디</button>
-        <button onclick="window.setCategoryFilter('시트러스')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-slate-900 text-slate-400 hover:text-white border border-slate-800" data-type="시트러스">시트러스</button>
-        <button onclick="window.setCategoryFilter('플로럴')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-slate-900 text-slate-400 hover:text-white border border-slate-800" data-type="플로럴">플로럴</button>
-        <button onclick="window.setCategoryFilter('머스크/비누')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-slate-900 text-slate-400 hover:text-white border border-slate-800" data-type="머스크/비누">머스크/비누</button>
-        <button onclick="window.setCategoryFilter('스파이시/오리엔탈')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-slate-900 text-slate-400 hover:text-white border border-slate-800" data-type="스파이시/오리엔탈">스파이시</button>
-      </div>
+      <div id="category-filter-bar" class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0"></div>
     </div>
 
     <!-- Master-Detail 뷰 -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-      <!-- 좌측 리스트 -->
       <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-3xl p-4 shadow-xl space-y-3">
         <div class="flex justify-between items-center px-1 pb-1 border-b border-slate-800/80">
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -91,7 +94,6 @@
         <div id="perfume-list-container" class="space-y-2 max-h-[calc(100vh-320px)] overflow-y-auto pr-1"></div>
       </div>
 
-      <!-- 우측 상세 뷰 -->
       <div id="perfume-detail-section" class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl min-h-[420px]">
         <div id="perfume-detail-content"></div>
       </div>
@@ -123,28 +125,34 @@
         </div>
       </div>
 
-      <!-- 🌟 향 노트(Main Accords) 텍스트 입력창 -->
+      <!-- 주요 협정 (Main Accords) -->
       <div>
         <div class="flex justify-between items-center mb-1">
-          <label class="text-xs text-slate-400 block">향 노트 (Main Accords - 쉼표로 구분)</label>
-          <span class="text-[10px] text-purple-400 font-mono">입력 순서대로 차트 생성</span>
+          <label class="text-xs text-slate-400 block">주요 협정 (Main Accords - 쉼표로 구분)</label>
+          <span class="text-[10px] text-purple-400 font-mono">순서대로 차트 생성</span>
         </div>
-        <input id="form-accords" type="text" placeholder="예: 광물, 짠, 감귤류, 나무, 선박, 신선하고 매콤한, 허브, 이끼 낀" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
+        <input id="form-accords" type="text" placeholder="예: 광물, 짠, 감귤류, 나무, 선박, 허브, 이끼 낀" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-xs text-slate-400 block mb-1">향조 계열</label>
-          <select id="form-category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:border-purple-500 focus:outline-none">
-            <option value="우디">우디</option>
-            <option value="시트러스">시트러스</option>
-            <option value="플로럴">플로럴</option>
-            <option value="머스크/비누">머스크/비누</option>
-            <option value="그린/허벌">그린/허벌</option>
-            <option value="스파이시/오리엔탈">스파이시/오리엔탈</option>
-            <option value="구르망/달달">구르망/달달</option>
-            <option value="아쿠아/프레시">아쿠아/프레시</option>
-          </select>
+          <label class="text-xs text-slate-400 block mb-1">향조 계열 (직접 입력 가능) *</label>
+          <input id="form-category" list="category-suggestions" type="text" placeholder="예: 마린/솔티, 레더, 우디 등" 
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-purple-500 focus:outline-none" />
+          <datalist id="category-suggestions">
+            <option value="우디"></option>
+            <option value="시트러스"></option>
+            <option value="플로럴"></option>
+            <option value="머스크/비누"></option>
+            <option value="그린/허벌"></option>
+            <option value="스파이시/오리엔탈"></option>
+            <option value="구르망/달달"></option>
+            <option value="아쿠아/프레시"></option>
+            <option value="마린/솔티"></option>
+            <option value="레더/가죽"></option>
+            <option value="스모키"></option>
+            <option value="알데하이드"></option>
+          </datalist>
         </div>
         <div>
           <label class="text-xs text-slate-400 block mb-1">농도(부향률)</label>
