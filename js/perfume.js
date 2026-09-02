@@ -95,9 +95,12 @@ export function handleCategorySelectChange(val) {
 }
 
 export function renderCategoryFilters() {
-  const filterBar = document.getElementById('category-filter-bar');
-  if (!filterBar) return;
+  // 🌟 가로 버튼 나열 대신 드롭다운 셀렉트 옵션으로 생성
+export function renderCategoryFilters() {
+  const selectEl = document.getElementById('category-filter-select');
+  if (!selectEl) return;
 
+  // DB에 등록된 향수들에서 고유 향조 추출
   const categories = new Set();
   cloudPerfumes.forEach(p => {
     if (p.category && p.category.trim()) categories.add(p.category.trim());
@@ -105,22 +108,14 @@ export function renderCategoryFilters() {
 
   const list = ['all', ...Array.from(categories)];
 
-  filterBar.innerHTML = list.map(cat => {
+  selectEl.innerHTML = list.map(cat => {
     const isAll = cat === 'all';
-    const label = isAll ? '전체' : cat;
-    const isActive = activeCategory === cat;
+    const label = isAll ? '전체 향조 보기' : cat;
+    const isSelected = activeCategory === cat;
 
-    return `
-      <button onclick="window.setCategoryFilter('${escapeHTML(cat)}')" 
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition border ${
-                isActive 
-                  ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-900/30' 
-                  : 'bg-slate-900 text-slate-400 hover:text-white border-slate-800'
-              }">
-        ${escapeHTML(label)}
-      </button>
-    `;
+    return `<option value="${escapeHTML(cat)}" ${isSelected ? 'selected' : ''}>${escapeHTML(label)}</option>`;
   }).join('');
+}
 }
 
 export function setCategoryFilter(category) {
