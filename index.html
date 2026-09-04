@@ -11,7 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <script type="module" src="js/app.js?v=9"></script>
+  <script type="module" src="js/app.js?v=10"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-16">
 
@@ -29,7 +29,7 @@
         </div>
       </div>
 
-      <!-- 🌟 상단 뷰 전환 탭 (향수 컬렉션 vs VIP 멤버십) -->
+      <!-- 상단 뷰 전환 탭 (향수 컬렉션 vs VIP 멤버십) -->
       <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
         <button id="tab-btn-perfumes" onclick="window.switchMainTab('perfumes')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-purple-600 text-white shadow-sm">
           <i class="fa-solid fa-spray-can"></i> 향수 컬렉션
@@ -44,11 +44,9 @@
         <span id="cloud-status" class="text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 font-mono">
           <i class="fa-solid fa-cloud"></i> DB 연결 중...
         </span>
-        <!-- 향수 등록 버튼 -->
         <button id="btn-open-perfume-add" onclick="window.openPerfumeModal()" class="text-xs md:text-sm bg-purple-600 hover:bg-purple-500 text-white font-semibold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-purple-600/20">
           <i class="fa-solid fa-plus text-xs"></i> 향수 등록
         </button>
-        <!-- VIP 등록 버튼 (VIP 탭 활성화 시에만 표시) -->
         <button id="btn-open-vip-add" onclick="window.openVipModal()" class="hidden text-xs md:text-sm bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-amber-500/20">
           <i class="fa-solid fa-crown text-xs"></i> VIP 브랜드 등록
         </button>
@@ -119,9 +117,8 @@
     </div>
   </main>
 
-  <!-- ================= [뷰 2] 🌟 VIP 멤버십 관리 뷰 (신설) ================= -->
+  <!-- ================= [뷰 2] VIP 멤버십 관리 뷰 ================= -->
   <main id="section-vip-view" class="hidden max-w-6xl mx-auto p-4 md:p-8 space-y-6">
-    <!-- VIP 상단 요약 배너 -->
     <div class="bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-slate-900 border border-amber-500/30 rounded-3xl p-5 md:p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
         <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -144,10 +141,7 @@
       </div>
     </div>
 
-    <!-- VIP 브랜드 카드 그리드 -->
-    <div id="vip-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <!-- JS 렌더링 -->
-    </div>
+    <div id="vip-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
   </main>
 
   <!-- ================= 모달 모음 ================= -->
@@ -278,7 +272,7 @@
     </div>
   </div>
 
-  <!-- 2. 👑 VIP 멤버십 등록/수정 모달 (신설) -->
+  <!-- 2. VIP 멤버십 등록/수정 모달 -->
   <div id="vip-modal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50 overflow-y-auto">
     <div class="bg-slate-900 rounded-2xl max-w-md w-full p-6 border border-slate-800 shadow-2xl space-y-4 my-8">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -324,7 +318,6 @@
         <textarea id="form-vip-benefits" rows="2" placeholder="예: 상시 5% 할인, 무료 인그레이빙(각인) 서비스, 신제품 프리 시향권" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"></textarea>
       </div>
 
-      <!-- 생일 선물 & 정기 바우처 수령 관리 -->
       <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 space-y-2">
         <span class="text-[11px] font-bold text-amber-400 block flex items-center gap-1.5">
           <i class="fa-solid fa-gift"></i> 연간 선물 및 혜택 수령 체크
@@ -361,7 +354,7 @@
     </div>
   </div>
 
-  <!-- 패밀리 사이트 퀵 네비게이터 플로팅 UI -->
+  <!-- 🌟 패밀리 사이트 퀵 네비게이터 플로팅 UI (경력 관리 링크 추가 반영) -->
   <div class="fixed bottom-6 right-6 z-50">
     <div id="family-site-menu" class="hidden mb-3 w-52 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-2xl shadow-2xl p-2 space-y-1 transition-all">
       <div class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800/80 mb-1">
@@ -378,6 +371,13 @@
           <i class="fa-solid fa-graduation-cap text-[10px]"></i>
         </div>
         <span>자격증 관리</span>
+      </a>
+      <!-- 🌟 추가된 경력 관리 링크 -->
+      <a href="https://jck0306-art.github.io/career/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
+        <div class="w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition">
+          <i class="fa-solid fa-briefcase text-[10px]"></i>
+        </div>
+        <span>경력 관리 (CareerTrack)</span>
       </a>
       <a href="https://jck0306-art.github.io/IronTrack/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
         <div class="w-6 h-6 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 group-hover:bg-rose-600 group-hover:text-white transition">
