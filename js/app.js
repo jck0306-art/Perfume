@@ -19,6 +19,7 @@ import {
   toggleVipCheck, 
   deleteVipItem 
 } from './vip.js';
+import { initAuthGuard, logoutAdmin } from './security.js';
 
 let activeTab = 'perfumes'; // 'perfumes' | 'vip'
 
@@ -67,6 +68,9 @@ window.saveVipItem = saveVipItem;
 window.toggleVipCheck = toggleVipCheck;
 window.deleteVipItem = deleteVipItem;
 
+// 관리자 로그아웃 전역 바인딩
+window.logoutAdmin = logoutAdmin;
+
 // 패밀리 사이트 토글
 window.toggleFamilySiteMenu = function() {
   const menu = document.getElementById('family-site-menu');
@@ -99,6 +103,9 @@ function render() {
   renderVipCards();
 }
 
+// 🌟 DOMContentLoaded 시 Firebase 인증 검사를 먼저 거친 후 DB 구독 실행
 window.addEventListener('DOMContentLoaded', () => {
-  initFirebase(render);
+  initAuthGuard(false, () => {
+    initFirebase(render);
+  });
 });
