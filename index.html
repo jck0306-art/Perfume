@@ -7,12 +7,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-<!-- Firebase SDK (기존 firestore 아래에 auth 추가) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-<script type="module" src="js/app.js?v=12"></script>
+  <script type="module" src="js/app.js?v=13"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-16">
 
@@ -89,7 +89,7 @@
     <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-3.5 flex flex-col sm:flex-row gap-3 items-center justify-between">
       <div class="relative w-full sm:flex-1">
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-        <input id="search-input" oninput="window.filterPerfumes()" type="text" placeholder="브랜드, 향수명, 향조, 노트 검색..." 
+        <input id="search-input" oninput="window.filterPerfumes()" type="text" placeholder="브랜드, 향수명, 향조, 구매처, 노트 검색..." 
           class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs md:text-sm text-white focus:outline-none focus:border-purple-500 placeholder-slate-500" />
       </div>
 
@@ -181,24 +181,33 @@
       </div>
 
       <div class="grid grid-cols-2 gap-3">
+        <!-- 향조 계열 (드롭다운 + 무제한 직접 입력) -->
         <div>
           <label class="text-xs text-slate-400 block mb-1">향조 계열 *</label>
           <div class="space-y-1.5">
             <select id="form-category-select" onchange="window.handleCategorySelectChange(this.value)" 
               class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:border-purple-500 focus:outline-none">
             </select>
-            <input id="form-category-custom" type="text" placeholder="새로운 향조 입력 (예: 마린/솔티, 레더)" 
+            <input id="form-category-custom" type="text" placeholder="새로운 향조 입력 (글자수 제한 없음)" 
               class="w-full bg-slate-950 border border-purple-500/50 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none hidden" />
           </div>
         </div>
+
+        <!-- 농도(부향률) (코롱 압솔뤼 포함 + 무제한 직접 입력) -->
         <div>
           <label class="text-xs text-slate-400 block mb-1">농도(부향률)</label>
-          <select id="form-concentration" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:border-purple-500 focus:outline-none">
-            <option value="EDP">오 드 퍼퓸 (EDP)</option>
-            <option value="EDT">오 드 뚜왈렛 (EDT)</option>
-            <option value="EDC">오 드 코롱 (EDC)</option>
-            <option value="Parfum">퍼퓸 / 엑스트레</option>
-          </select>
+          <div class="space-y-1.5">
+            <select id="form-concentration-select" onchange="window.handleConcentrationSelectChange(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:border-purple-500 focus:outline-none">
+              <option value="EDP">오 드 퍼퓸 (EDP)</option>
+              <option value="EDT">오 드 뚜왈렛 (EDT)</option>
+              <option value="EDC">오 드 코롱 (EDC)</option>
+              <option value="Cologne Absolue">코롱 압솔뤼 (Cologne Absolue)</option>
+              <option value="Parfum">퍼퓸 / 엑스트레 (Parfum)</option>
+              <option value="__custom__">✏️ 직접 입력하기</option>
+            </select>
+            <input id="form-concentration-custom" type="text" placeholder="새로운 농도 입력 (글자수 제한 없음)" 
+              class="w-full bg-slate-950 border border-purple-500/50 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none hidden" />
+          </div>
         </div>
       </div>
 
@@ -250,9 +259,10 @@
           <label class="text-xs text-slate-400 block mb-1">구매 일자 (선택)</label>
           <input id="form-buy-date" type="date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none font-mono" />
         </div>
+        <!-- 구매처 (글자 수 제한 없음) -->
         <div>
-          <label class="text-xs text-slate-400 block mb-1">구매처 (선택)</label>
-          <input id="form-store" type="text" placeholder="예: 신세계 강남, 면세점" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
+          <label class="text-xs text-slate-400 block mb-1">구매처 (선택 / 길이 제한 없음)</label>
+          <input id="form-store" type="text" placeholder="예: 신세계 강남점 본관 1층 프래그런스 라운지" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
         </div>
       </div>
 
@@ -355,7 +365,7 @@
     </div>
   </div>
 
-  <!-- 🌟 패밀리 사이트 퀵 네비게이터 플로팅 UI (태그 구조 및 토글 정상화) -->
+  <!-- 🌟 패밀리 사이트 퀵 네비게이터 플로팅 UI -->
   <div class="fixed bottom-6 right-6 z-50">
     <div id="family-site-menu" class="hidden mb-3 w-52 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-2xl shadow-2xl p-2 space-y-1 transition-all">
       <div class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800/80 mb-1">
