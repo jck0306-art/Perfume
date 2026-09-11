@@ -9,6 +9,14 @@ const DEFAULT_CATEGORIES = [
   '그린/허벌', '스파이시/오리엔탈', '구르망/달달', '아쿠아/프레시', '마린/솔티', '레더'
 ];
 
+const DEFAULT_CONCENTRATIONS = [
+  { value: 'EDP', label: '오 드 퍼퓸 (EDP)' },
+  { value: 'EDT', label: '오 드 뚜왈렛 (EDT)' },
+  { value: 'EDC', label: '오 드 코롱 (EDC)' },
+  { value: 'Cologne Absolue', label: '코롱 압솔뤼 (Cologne Absolue)' },
+  { value: 'Parfum', label: '퍼퓸 / 엑스트레 (Parfum)' }
+];
+
 function getAccordStyle(accordName) {
   const name = accordName.toLowerCase();
   if (name.includes('짠') || name.includes('salty') || name.includes('선박') || name.includes('marine') || name.includes('해양') || name.includes('바다') || name.includes('마린')) {
@@ -47,16 +55,14 @@ function getAccordStyle(accordName) {
   return { bg: '#a78bfa', text: '#ffffff', border: '#c4b5fd' };
 }
 
-// 🌟 기존 등록된 향조 + 기본 추천 향조 목록 취합
 function getAllKnownCategories() {
   const catSet = new Set(DEFAULT_CATEGORIES);
   cloudPerfumes.forEach(p => {
-    if (p.category && p.category.trim()) catSet.add(p.category.trim());
+    if (p.category && String(p.category).trim()) catSet.add(String(p.category).trim());
   });
   return Array.from(catSet);
 }
 
-// 🌟 모달 열릴 때 드롭다운 옵션 자동 채우기
 function populateCategorySelect(currentValue = '') {
   const selectEl = document.getElementById('form-category-select');
   const customInput = document.getElementById('form-category-custom');
@@ -80,7 +86,6 @@ function populateCategorySelect(currentValue = '') {
   }
 }
 
-// 드롭다운 변경 시 '직접 입력' 창 토글
 export function handleCategorySelectChange(val) {
   const customInput = document.getElementById('form-category-custom');
   if (!customInput) return;
@@ -94,14 +99,49 @@ export function handleCategorySelectChange(val) {
   }
 }
 
-// 🌟 가로 버튼 나열 대신 드롭다운 셀렉트 옵션으로 정상 생성
+// 🌟 부향률(농도) 옵션 동적 세팅 및 직접 입력 지원
+function populateConcentrationSelect(currentValue = 'EDP') {
+  const selectEl = document.getElementById('form-concentration-select');
+  const customInput = document.getElementById('form-concentration-custom');
+  if (!selectEl) return;
+
+  const standardValues = DEFAULT_CONCENTRATIONS.map(c => c.value);
+  const isCustom = currentValue && !standardValues.includes(currentValue);
+
+  selectEl.innerHTML = `
+    ${DEFAULT_CONCENTRATIONS.map(c => `<option value="${escapeHTML(c.value)}" ${c.value === currentValue ? 'selected' : ''}>${escapeHTML(c.label)}</option>`).join('')}
+    <option value="__custom__" ${isCustom ? 'selected' : ''}>✏️ 직접 입력하기</option>
+  `;
+
+  if (isCustom) {
+    customInput.classList.remove('hidden');
+    customInput.value = currentValue;
+  } else {
+    customInput.classList.add('hidden');
+    customInput.value = '';
+  }
+}
+
+export function handleConcentrationSelectChange(val) {
+  const customInput = document.getElementById('form-concentration-custom');
+  if (!customInput) return;
+
+  if (val === '__custom__') {
+    customInput.classList.remove('hidden');
+    customInput.focus();
+  } else {
+    customInput.classList.add('hidden');
+    customInput.value = '';
+  }
+}
+
 export function renderCategoryFilters() {
   const selectEl = document.getElementById('category-filter-select');
   if (!selectEl) return;
 
   const categories = new Set();
   cloudPerfumes.forEach(p => {
-    if (p.category && p.category.trim()) categories.add(p.category.trim());
+    if (p.category && String(p.category).trim()) categories.add(String(p.category).trim());
   });
 
   const list = ['all', ...Array.from(categories)];
@@ -151,6 +191,7 @@ export function renderPerfumeListView() {
       (item.brand && item.brand.toLowerCase().includes(search)) || 
       (item.name && item.name.toLowerCase().includes(search)) || 
       (item.category && item.category.toLowerCase().includes(search)) || 
+      (item.concentration && item.concentration.toLowerCase().includes(search)) || 
       (item.store && item.store.toLowerCase().includes(search)) || 
       (item.notes && item.notes.toLowerCase().includes(search)) || 
       (item.accords && item.accords.some(a => a.toLowerCase().includes(search))) || 
@@ -189,15 +230,15 @@ export function renderPerfumeListView() {
                : 'bg-slate-950/70 border-slate-800/80 text-slate-300 hover:bg-slate-900 hover:border-slate-700'
            }">
         <div class="flex-1 min-w-0 pr-3">
-          <div class="flex items-center gap-2 mb-0.5">
-            <span class="text-[10px] font-bold uppercase tracking-wider ${isSelected ? 'text-purple-300' : 'text-purple-400/90'} truncate">
+          <div class="flex items-center gap-2 mb-0.5 flex-wrap">
+            <span class="text-[10px] font-bold uppercase tracking-wider ${isSelected ? 'text-purple-300' : 'text-purple-400/90'}">
               ${escapeHTML(item.brand)}
             </span>
             <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800/80 text-slate-400 border border-slate-700/60 font-mono">
               ${escapeHTML(item.concentration || 'EDP')}
             </span>
           </div>
-          <h4 class="text-sm font-bold truncate ${isSelected ? 'text-white' : 'text-slate-200 group-hover:text-purple-300'}">
+          <h4 class="text-sm font-bold break-words ${isSelected ? 'text-white' : 'text-slate-200 group-hover:text-purple-300'}">
             ${escapeHTML(item.name)}
           </h4>
         </div>
@@ -245,7 +286,7 @@ export function renderPerfumeDetailView() {
           <span class="text-xs font-bold uppercase tracking-wider text-purple-400 block mb-0.5">
             ${escapeHTML(item.brand)}
           </span>
-          <h2 class="text-xl md:text-2xl font-black text-white">
+          <h2 class="text-xl md:text-2xl font-black text-white break-words">
             ${escapeHTML(item.name)}
           </h2>
         </div>
@@ -261,8 +302,8 @@ export function renderPerfumeDetailView() {
 
       <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
         <div class="flex flex-wrap gap-1.5 text-xs">
-          <span class="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/30 font-semibold">${escapeHTML(item.category || '기타')}</span>
-          <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700/80">${escapeHTML(item.concentration)}</span>
+          <span class="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/30 font-semibold break-words">${escapeHTML(item.category || '기타')}</span>
+          <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700/80 break-words font-mono">${escapeHTML(item.concentration || 'EDP')}</span>
           ${seasonsList.map(s => `
             <span class="px-2 py-1 rounded-lg bg-slate-800 text-emerald-300 border border-emerald-500/20 text-xs font-medium">
               <i class="fa-solid fa-leaf text-[9px] mr-1"></i>${escapeHTML(s)}
@@ -287,10 +328,10 @@ export function renderPerfumeDetailView() {
 
       ${(item.store || item.buyDate) ? `
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
-          <div class="flex items-center gap-2 text-slate-300">
-            <i class="fa-solid fa-bag-shopping text-purple-400"></i>
-            <span class="text-slate-500">구매처:</span>
-            <strong class="text-slate-200">${escapeHTML(item.store || '미기재')}</strong>
+          <div class="flex items-start gap-2 text-slate-300">
+            <i class="fa-solid fa-bag-shopping text-purple-400 mt-0.5"></i>
+            <span class="text-slate-500 shrink-0">구매처:</span>
+            <strong class="text-slate-200 break-words font-medium">${escapeHTML(item.store || '미기재')}</strong>
           </div>
           <div class="flex items-center gap-2 text-slate-300 font-mono">
             <i class="fa-regular fa-calendar text-indigo-400"></i>
@@ -304,7 +345,7 @@ export function renderPerfumeDetailView() {
         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block flex items-center gap-1.5">
           <i class="fa-solid fa-layer-group text-purple-400"></i> Fragrance Notes (탑 / 미들 / 베이스)
         </span>
-        <p class="text-xs text-slate-200 leading-relaxed font-mono">
+        <p class="text-xs text-slate-200 leading-relaxed font-mono break-words">
           ${escapeHTML(item.notes || '기록된 노트 정보가 없습니다.')}
         </p>
       </div>
@@ -313,12 +354,11 @@ export function renderPerfumeDetailView() {
         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block flex items-center gap-1.5">
           <i class="fa-solid fa-comment-dots text-purple-400"></i> 시향기 & 착향 메모
         </span>
-        <p class="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">
+        <p class="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap break-words">
           ${escapeHTML(item.memo || '작성된 시향 메모가 없습니다.')}
         </p>
       </div>
 
-      <!-- 향 노트 차트 (왼쪽 정렬) -->
       ${accordsList.length > 0 ? `
         <div class="bg-slate-950/90 rounded-2xl border border-slate-800/90 p-4 md:p-5 shadow-inner space-y-3">
           <div class="text-left">
@@ -378,8 +418,7 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-accords').value = Array.isArray(item.accords) ? item.accords.join(', ') : '';
     
     populateCategorySelect(item.category || '');
-
-    document.getElementById('form-concentration').value = item.concentration || 'EDP';
+    populateConcentrationSelect(item.concentration || 'EDP');
     
     const seasons = Array.isArray(item.seasons) ? item.seasons : [];
     document.querySelectorAll('.season-checkbox input[type="checkbox"]').forEach(cb => {
@@ -402,8 +441,8 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-accords').value = '';
     
     populateCategorySelect('우디');
+    populateConcentrationSelect('EDP');
 
-    document.getElementById('form-concentration').value = 'EDP';
     document.getElementById('form-capacity').value = '';
     document.getElementById('form-remain').value = 100;
     document.getElementById('remain-val').innerText = '100%';
@@ -430,14 +469,21 @@ export function savePerfume() {
   const name = document.getElementById('form-name').value.trim();
   const accordsRaw = document.getElementById('form-accords').value.trim();
   
-  const selectVal = document.getElementById('form-category-select').value;
-  const customVal = document.getElementById('form-category-custom').value.trim();
-  let category = selectVal;
-  if (selectVal === '__custom__' || !selectVal) {
-    category = customVal || '기타';
+  // 향조 계열 (글자 수 제한 없음)
+  const catSelectVal = document.getElementById('form-category-select').value;
+  const catCustomVal = document.getElementById('form-category-custom').value.trim();
+  let category = catSelectVal;
+  if (catSelectVal === '__custom__' || !catSelectVal) {
+    category = catCustomVal || '기타';
   }
 
-  const concentration = document.getElementById('form-concentration').value;
+  // 농도/부향률 (글자 수 제한 없음)
+  const conSelectVal = document.getElementById('form-concentration-select').value;
+  const conCustomVal = document.getElementById('form-concentration-custom').value.trim();
+  let concentration = conSelectVal;
+  if (conSelectVal === '__custom__' || !conSelectVal) {
+    concentration = conCustomVal || 'EDP';
+  }
 
   const selectedSeasons = Array.from(document.querySelectorAll('.season-checkbox input[type="checkbox"]:checked'))
     .map(cb => cb.value);
@@ -450,7 +496,7 @@ export function savePerfume() {
   const remain = Number(document.getElementById('form-remain').value);
   const rating = Number(document.getElementById('form-rating').value);
   const buyDate = document.getElementById('form-buy-date').value;
-  const store = document.getElementById('form-store').value.trim();
+  const store = document.getElementById('form-store').value.trim(); // 글자 수 제한 없음
   const notes = document.getElementById('form-notes').value.trim();
   const memo = document.getElementById('form-memo').value.trim();
 
