@@ -8,6 +8,7 @@ import {
   openPerfumeModal, 
   closePerfumeModal, 
   handleCategorySelectChange,
+  handleConcentrationSelectChange,
   savePerfume, 
   deletePerfume 
 } from './perfume.js';
@@ -21,9 +22,8 @@ import {
 } from './vip.js';
 import { initAuthGuard, logoutAdmin } from './security.js';
 
-let activeTab = 'perfumes'; // 'perfumes' | 'vip'
+let activeTab = 'perfumes';
 
-// 🌟 향수 컬렉션 ↔ VIP 멤버십 메인 탭 전환 함수
 window.switchMainTab = function(tabKey) {
   activeTab = tabKey;
   const tabBtnP = document.getElementById('tab-btn-perfumes');
@@ -58,6 +58,7 @@ window.selectPerfume = selectPerfume;
 window.openPerfumeModal = openPerfumeModal;
 window.closePerfumeModal = closePerfumeModal;
 window.handleCategorySelectChange = handleCategorySelectChange;
+window.handleConcentrationSelectChange = handleConcentrationSelectChange;
 window.savePerfume = savePerfume;
 window.deletePerfume = deletePerfume;
 
@@ -71,7 +72,6 @@ window.deleteVipItem = deleteVipItem;
 // 관리자 로그아웃 전역 바인딩
 window.logoutAdmin = logoutAdmin;
 
-// 패밀리 사이트 토글
 window.toggleFamilySiteMenu = function() {
   const menu = document.getElementById('family-site-menu');
   const icon = document.getElementById('family-site-icon');
@@ -103,7 +103,6 @@ function render() {
   renderVipCards();
 }
 
-// 🌟 DOMContentLoaded 시 Firebase 인증 검사를 먼저 거친 후 DB 구독 실행
 window.addEventListener('DOMContentLoaded', () => {
   initAuthGuard(false, () => {
     initFirebase(render);
