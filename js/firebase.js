@@ -22,7 +22,21 @@ export const DEFAULT_PERFUMES = [
     store: '신세계 강남',
     accords: ['광물', '짠', '감귤류', '나무', '선박', '신선하고 매콤한', '허브', '이끼 낀', '달콤한', '향긋한'],
     notes: '베르가못 / 씨 솔트 / 드리프트우드',
-    memo: '첫 느낌 : 음.... 이게 무슨 느낌이지...? 바닷가 수풀 속에 서있는 느낌 (상쾌하지도 싱그럽지도 않은 축축한 소금기 있는 풀향)'
+    memo: '첫 느낌 : 음.... 이게 무슨 느낌이지...? 바닷가 수풀 속에 서있는 느낌'
+  }
+];
+
+export const DEFAULT_WISH_ITEMS = [
+  {
+    id: 'wish_1',
+    brand: '르 라보 (LE LABO)',
+    name: '상탈 33 (Santal 33)',
+    category: '우디/스파이시',
+    price: '280,000원 / 50ml',
+    tested: true,
+    priority: 3,
+    store: '신세계 강남점 또는 면세점',
+    memo: '가을/겨울 착향 시 잔향이 예술. 다음 면세 찬스 때 구매 고려!'
   }
 ];
 
@@ -48,6 +62,9 @@ let isFirebaseReady = false;
 
 const cachedPerfumes = localStorage.getItem('scent_cloud_data_v1') || localStorage.getItem('scent_archive_v1');
 export let cloudPerfumes = cachedPerfumes ? JSON.parse(cachedPerfumes) : DEFAULT_PERFUMES;
+
+const cachedWish = localStorage.getItem('scent_wish_data_v1');
+export let cloudWishItems = cachedWish ? JSON.parse(cachedWish) : DEFAULT_WISH_ITEMS;
 
 const cachedVip = localStorage.getItem('scent_vip_data_v1');
 export let cloudVipItems = cachedVip ? JSON.parse(cachedVip) : DEFAULT_VIP_ITEMS;
@@ -75,6 +92,15 @@ function normalizePerfume(item, idx) {
   };
 }
 
+function normalizeWish(item, idx) {
+  return {
+    ...item,
+    id: item.id ? String(item.id) : `wish_${Date.now()}_${idx}`,
+    tested: Boolean(item.tested),
+    priority: Number(item.priority) || 1
+  };
+}
+
 function normalizeVip(item, idx) {
   return {
     ...item,
@@ -86,6 +112,7 @@ function normalizeVip(item, idx) {
 
 export function initFirebase(onDataUpdate) {
   cloudPerfumes = cloudPerfumes.map(normalizePerfume);
+  cloudWishItems = cloudWishItems.map(normalizeWish);
   cloudVipItems = cloudVipItems.map(normalizeVip);
 
   onDataUpdate();
@@ -112,6 +139,10 @@ export function initFirebase(onDataUpdate) {
           cloudPerfumes = data.items.map(normalizePerfume);
           localStorage.setItem('scent_cloud_data_v1', JSON.stringify(cloudPerfumes));
         }
+        if (Array.isArray(data.wishItems)) {
+          cloudWishItems = data.wishItems.map(normalizeWish);
+          localStorage.setItem('scent_wish_data_v1', JSON.stringify(cloudWishItems));
+        }
         if (Array.isArray(data.vipItems)) {
           cloudVipItems = data.vipItems.map(normalizeVip);
           localStorage.setItem('scent_vip_data_v1', JSON.stringify(cloudVipItems));
@@ -119,6 +150,7 @@ export function initFirebase(onDataUpdate) {
       } else {
         db.collection("perfume_archive").doc("user_collection").set({ 
           items: cloudPerfumes, 
+          wishItems: cloudWishItems,
           vipItems: cloudVipItems 
         });
       }
@@ -145,8 +177,10 @@ export function initFirebase(onDataUpdate) {
 
 export async function syncPerfumes(onRender) {
   cloudPerfumes = cloudPerfumes.map(normalizePerfume);
+  cloudWishItems = cloudWishItems.map(normalizeWish);
   cloudVipItems = cloudVipItems.map(normalizeVip);
   localStorage.setItem('scent_cloud_data_v1', JSON.stringify(cloudPerfumes));
+  localStorage.setItem('scent_wish_data_v1', JSON.stringify(cloudWishItems));
   localStorage.setItem('scent_vip_data_v1', JSON.stringify(cloudVipItems));
 
   const statusEl = document.getElementById('cloud-status');
@@ -156,6 +190,7 @@ export async function syncPerfumes(onRender) {
     try {
       await db.collection("perfume_archive").doc("user_collection").set({ 
         items: cloudPerfumes, 
+        wishItems: cloudWishItems,
         vipItems: cloudVipItems 
       });
       if (statusEl) {
