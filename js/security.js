@@ -50,7 +50,7 @@ export async function logoutAdmin() {
   window.location.href = "https://jck0306-art.github.io/portal/";
 }
 
-// 🌟 전체 페이지 보안 가드
+// 🌟 전체 페이지 보안 가드 (리다이렉트 없이 화면 중앙에 로그인 모달 고정)
 export function initAuthGuard(isPortal = false, onAuthorized = null) {
   // 1. 화면 잠금 오버레이 주입
   let overlay = document.getElementById('auth-lock-overlay');
@@ -68,7 +68,7 @@ export function initAuthGuard(isPortal = false, onAuthorized = null) {
           <p class="text-xs text-slate-400 mt-1">지정된 Google 관리자 계정(${ADMIN_EMAIL})으로 로그인해 주세요.</p>
         </div>
         <div class="pt-2">
-          <button id="btn-guard-login" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30">
+          <button id="btn-guard-login" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 cursor-pointer">
             <i class="fa-brands fa-google"></i> Google 계정으로 로그인
           </button>
         </div>
@@ -79,11 +79,10 @@ export function initAuthGuard(isPortal = false, onAuthorized = null) {
     document.getElementById('btn-guard-login').onclick = () => loginWithGoogle();
   }
 
-  // 2. Firebase App 및 Auth가 준비될 때까지 안전하게 대기
+  // 2. Firebase App 및 Auth 상태 감시
   let retryCount = 0;
   const checkTimer = setInterval(() => {
     retryCount++;
-    // firebase SDK 로드 및 initializeApp()이 끝났는지 확인
     if (window.firebase && window.firebase.apps && window.firebase.apps.length > 0 && window.firebase.auth) {
       clearInterval(checkTimer);
 
@@ -91,30 +90,27 @@ export function initAuthGuard(isPortal = false, onAuthorized = null) {
         const curOverlay = document.getElementById('auth-lock-overlay');
 
         if (user && user.email === ADMIN_EMAIL) {
-          // 승인된 관리자
+          // 승인된 관리자: 잠금 오버레이 제거 및 진입 허용
           if (curOverlay) curOverlay.remove();
           renderUserUI(user);
           if (onAuthorized) onAuthorized(user);
         } else {
-          // 미인증 또는 다른 계정
-          if (user) {
+          // 미인증 상태: 튕겨내지(리다이렉트) 않고 로그인 모달을 화면에 그대로 유지
+          if (user && user.email !== ADMIN_EMAIL) {
             alert(`비인가 계정입니다 (${user.email}). 관리자 계정만 접근 가능합니다.`);
             window.firebase.auth().signOut();
           }
 
-          if (!isPortal) {
-            // 패밀리 사이트는 포털로 리다이렉트
-            window.location.href = "https://jck0306-art.github.io/portal/";
-          } else {
-            if (curOverlay) curOverlay.style.display = 'flex';
+          if (curOverlay) {
+            curOverlay.style.display = 'flex';
           }
         }
       });
     }
 
-    if (retryCount > 60) { // 6초 동안 초기화가 안 되면 알림
+    if (retryCount > 60) {
       clearInterval(checkTimer);
-      alert("Firebase 초기화에 실패했습니다. HTML에 Firebase SDK가 제대로 삽입되어 있는지 확인해 주세요.");
+      console.error("Firebase 초기화 대기 시간 초과");
     }
   }, 100);
 }
