@@ -5,9 +5,7 @@ let activeCategory = 'all';
 let selectedPerfumeId = null;
 
 const DEFAULT_CATEGORIES = [
-  '우디', '시트러스', '플로럴', '머스크/비누', 
-  '그린/허벌', '스파이시/오리엔탈', '구르망/달달', '아쿠아/프레시', '마린/솔티', '레더'
-];
+  '우디', '시트러스', '플로럴', '머스크/비누'];
 
 const DEFAULT_CONCENTRATIONS = [
   { value: 'EDP', label: '오 드 퍼퓸 (EDP)' },
