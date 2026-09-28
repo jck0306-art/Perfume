@@ -10,7 +10,8 @@ import {
   handleCategorySelectChange,
   handleConcentrationSelectChange,
   savePerfume, 
-  deletePerfume 
+  deletePerfume,
+  downloadPerfumesExcel // 🌟 추가
 } from './perfume.js';
 import { 
   renderWishCards, 
@@ -80,6 +81,7 @@ window.handleCategorySelectChange = handleCategorySelectChange;
 window.handleConcentrationSelectChange = handleConcentrationSelectChange;
 window.savePerfume = savePerfume;
 window.deletePerfume = deletePerfume;
+window.downloadPerfumesExcel = downloadPerfumesExcel; // 🌟 추가
 
 // 위시리스트 전역 바인딩
 window.openWishModal = openWishModal;
