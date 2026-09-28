@@ -26,20 +26,6 @@ export const DEFAULT_PERFUMES = [
   }
 ];
 
-export const DEFAULT_WISH_ITEMS = [
-  {
-    id: 'wish_1',
-    brand: '르 라보 (LE LABO)',
-    name: '상탈 33 (Santal 33)',
-    category: '우디/스파이시',
-    price: '280,000원 / 50ml',
-    tested: true,
-    priority: 3,
-    store: '신세계 강남점 또는 면세점',
-    memo: '가을/겨울 착향 시 잔향이 예술. 다음 면세 찬스 때 구매 고려!'
-  }
-];
-
 export const DEFAULT_VIP_ITEMS = [
   {
     id: 'vip_1',
@@ -48,12 +34,12 @@ export const DEFAULT_VIP_ITEMS = [
     store: '신세계백화점 강남점',
     validDate: '2026-12-31까지',
     points: '32,000P',
-    benefits: '상시 5% 마일리지 적립, 스페셜 각인 무료 서비스, 시크릿 살롱 초대권',
+    benefits: '상시 5% 마일리지 적립',
     giftDesc: '미니어처 캔들 & 바디크림 2종',
     giftReceived: false,
-    voucherDesc: '생일 축하 2만원 할인 바우처',
+    voucherDesc: '생일 축하 기프트',
     voucherReceived: true,
-    memo: '매니저님 연락처 등록됨 / 10월 신규 라인업 런칭 행사 예정'
+    memo: '매니저님 연락처 등록됨'
   }
 ];
 
