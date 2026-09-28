@@ -299,10 +299,9 @@ export function renderPerfumeDetailView() {
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
-        <div class="flex flex-wrap gap-1.5 text-xs">
-          <span class="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/30 font-semibold break-words">${escapeHTML(item.category || '기타')}</span>
-          <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700/80 break-words font-mono">${escapeHTML(item.concentration || 'EDP')}</span>
-          ${seasonsList.map(s => `
+        <div class="flex flex-wrap gap-1.5 text-xs items-center">
+          <span class="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/30 font-semibold break-all whitespace-normal leading-relaxed">${escapeHTML(item.category || '기타')}</span>
+          <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700/80 break-all whitespace-normal font-mono leading-relaxed">${escapeHTML(item.concentration \vert{}\vert{} 'EDP')}</span>${seasonsList.map(s => `
             <span class="px-2 py-1 rounded-lg bg-slate-800 text-emerald-300 border border-emerald-500/20 text-xs font-medium">
               <i class="fa-solid fa-leaf text-[9px] mr-1"></i>${escapeHTML(s)}
             </span>
@@ -542,4 +541,59 @@ export function deletePerfume(id) {
     renderCategoryFilters();
     renderPerfumeListView();
   });
+}
+
+// 🌟 향수 컬렉션 엑셀(XLSX) 다운로드 함수
+export function downloadPerfumesExcel() {
+  if (!window.XLSX) {
+    return alert('엑셀 생성 라이브러리를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+  }
+
+  if (!cloudPerfumes || cloudPerfumes.length === 0) {
+    return alert('다운로드할 향수 데이터가 없습니다.');
+  }
+
+  // 엑셀 시트에 들어갈 정돈된 데이터 매핑
+  const excelData = cloudPerfumes.map((p, idx) => ({
+    "No": idx + 1,
+    "브랜드": p.brand || '',
+    "향수명": p.name || '',
+    "향조 계열": p.category || '',
+    "농도(부향률)": p.concentration || '',
+    "어울리는 계절": Array.isArray(p.seasons) ? p.seasons.join(', ') : '',
+    "용량": p.capacity || '',
+    "잔여량(%)": `${p.remain || 100}%`,
+    "평점": `${p.rating || 5}점`,
+    "구매일자": p.buyDate || '',
+    "구매처": p.store || '',
+    "노트 구성": p.notes || '',
+    "향 노트(Accords)": Array.isArray(p.accords) ? p.accords.join(', ') : '',
+    "시향기 및 메모": p.memo || ''
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+  // 컬럼별 적정 너비 설정
+  worksheet['!cols'] = [
+    { wch: 6 },  // No
+    { wch: 22 }, // 브랜드
+    { wch: 25 }, // 향수명
+    { wch: 15 }, // 향조 계열
+    { wch: 14 }, // 농도
+    { wch: 16 }, // 계절
+    { wch: 10 }, // 용량
+    { wch: 12 }, // 잔여량
+    { wch: 8 },  // 평점
+    { wch: 14 }, // 구매일자
+    { wch: 18 }, // 구매처
+    { wch: 30 }, // 노트 구성
+    { wch: 30 }, // Accords
+    { wch: 40 }  // 시향기
+  ];
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "보유향수_컬렉션");
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(workbook, `ScentTrack_향수컬렉션_${todayStr}.xlsx`);
 }
