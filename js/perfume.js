@@ -5,7 +5,9 @@ let activeCategory = 'all';
 let selectedPerfumeId = null;
 
 const DEFAULT_CATEGORIES = [
-  '우디', '시트러스', '플로럴', '머스크/비누'];
+  '우디', '시트러스', '플로럴', '머스크/비누', 
+  '그린/허벌', '스파이시/오리엔탈', '구르망/달달', '아쿠아/프레시', '마린/솔티', '레더'
+];
 
 const DEFAULT_CONCENTRATIONS = [
   { value: 'EDP', label: '오 드 퍼퓸 (EDP)' },
@@ -16,7 +18,7 @@ const DEFAULT_CONCENTRATIONS = [
 ];
 
 function getAccordStyle(accordName) {
-  const name = accordName.toLowerCase();
+  const name = String(accordName || '').toLowerCase();
   if (name.includes('짠') || name.includes('salty') || name.includes('선박') || name.includes('marine') || name.includes('해양') || name.includes('바다') || name.includes('마린')) {
     return { bg: '#2b6cb0', text: '#ffffff', border: '#4299e1' };
   }
@@ -75,12 +77,14 @@ function populateCategorySelect(currentValue = '') {
     <option value="__custom__" ${isCustom ? 'selected' : ''}>✏️ 직접 입력하기</option>
   `;
 
-  if (isCustom) {
-    customInput.classList.remove('hidden');
-    customInput.value = currentValue;
-  } else {
-    customInput.classList.add('hidden');
-    customInput.value = '';
+  if (customInput) {
+    if (isCustom) {
+      customInput.classList.remove('hidden');
+      customInput.value = currentValue;
+    } else {
+      customInput.classList.add('hidden');
+      customInput.value = '';
+    }
   }
 }
 
@@ -97,7 +101,6 @@ export function handleCategorySelectChange(val) {
   }
 }
 
-// 🌟 부향률(농도) 옵션 동적 세팅 및 직접 입력 지원
 function populateConcentrationSelect(currentValue = 'EDP') {
   const selectEl = document.getElementById('form-concentration-select');
   const customInput = document.getElementById('form-concentration-custom');
@@ -111,12 +114,14 @@ function populateConcentrationSelect(currentValue = 'EDP') {
     <option value="__custom__" ${isCustom ? 'selected' : ''}>✏️ 직접 입력하기</option>
   `;
 
-  if (isCustom) {
-    customInput.classList.remove('hidden');
-    customInput.value = currentValue;
-  } else {
-    customInput.classList.add('hidden');
-    customInput.value = '';
+  if (customInput) {
+    if (isCustom) {
+      customInput.classList.remove('hidden');
+      customInput.value = currentValue;
+    } else {
+      customInput.classList.add('hidden');
+      customInput.value = '';
+    }
   }
 }
 
@@ -170,9 +175,9 @@ export function updateStats() {
   const avg = cloudPerfumes.length 
     ? (cloudPerfumes.reduce((acc, cur) => acc + Number(cur.rating), 0) / cloudPerfumes.length).toFixed(1) 
     : '0.0';
-  ratingEl.innerText = avg;
-  favsEl.innerText = cloudPerfumes.filter(p => Number(p.rating) === 5).length;
-  reviewedEl.innerText = cloudPerfumes.filter(p => p.memo && p.memo.trim().length > 0).length;
+  if (ratingEl) ratingEl.innerText = avg;
+  if (favsEl) favsEl.innerText = cloudPerfumes.filter(p => Number(p.rating) === 5).length;
+  if (reviewedEl) reviewedEl.innerText = cloudPerfumes.filter(p => p.memo && p.memo.trim().length > 0).length;
 }
 
 export function renderPerfumeListView() {
@@ -301,7 +306,8 @@ export function renderPerfumeDetailView() {
       <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
         <div class="flex flex-wrap gap-1.5 text-xs items-center">
           <span class="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/30 font-semibold break-all whitespace-normal leading-relaxed">${escapeHTML(item.category || '기타')}</span>
-          <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700/80 break-all whitespace-normal font-mono leading-relaxed">${escapeHTML(item.concentration \vert{}\vert{} 'EDP')}</span>${seasonsList.map(s => `
+          <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700/80 break-all whitespace-normal font-mono leading-relaxed">${escapeHTML(item.concentration || 'EDP')}</span>
+          ${seasonsList.map(s => `
             <span class="px-2 py-1 rounded-lg bg-slate-800 text-emerald-300 border border-emerald-500/20 text-xs font-medium">
               <i class="fa-solid fa-leaf text-[9px] mr-1"></i>${escapeHTML(s)}
             </span>
@@ -408,7 +414,7 @@ export function openPerfumeModal(id = null) {
     const item = cloudPerfumes.find(p => String(p.id) === targetId);
     if (!item) return;
 
-    title.innerHTML = `<i class="fa-solid fa-pen text-purple-400"></i> 향수 정보 수정`;
+    title.innerHTML = '<i class="fa-solid fa-pen text-purple-400"></i> 향수 정보 수정';
     formId.value = item.id;
     document.getElementById('form-brand').value = item.brand || '';
     document.getElementById('form-name').value = item.name || '';
@@ -431,7 +437,7 @@ export function openPerfumeModal(id = null) {
     document.getElementById('form-notes').value = item.notes || '';
     document.getElementById('form-memo').value = item.memo || '';
   } else {
-    title.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> 새 향수 등록`;
+    title.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> 새 향수 등록';
     formId.value = '';
     document.getElementById('form-brand').value = '';
     document.getElementById('form-name').value = '';
@@ -466,7 +472,6 @@ export function savePerfume() {
   const name = document.getElementById('form-name').value.trim();
   const accordsRaw = document.getElementById('form-accords').value.trim();
   
-  // 향조 계열 (글자 수 제한 없음)
   const catSelectVal = document.getElementById('form-category-select').value;
   const catCustomVal = document.getElementById('form-category-custom').value.trim();
   let category = catSelectVal;
@@ -474,7 +479,6 @@ export function savePerfume() {
     category = catCustomVal || '기타';
   }
 
-  // 농도/부향률 (글자 수 제한 없음)
   const conSelectVal = document.getElementById('form-concentration-select').value;
   const conCustomVal = document.getElementById('form-concentration-custom').value.trim();
   let concentration = conSelectVal;
@@ -493,7 +497,7 @@ export function savePerfume() {
   const remain = Number(document.getElementById('form-remain').value);
   const rating = Number(document.getElementById('form-rating').value);
   const buyDate = document.getElementById('form-buy-date').value;
-  const store = document.getElementById('form-store').value.trim(); // 글자 수 제한 없음
+  const store = document.getElementById('form-store').value.trim();
   const notes = document.getElementById('form-notes').value.trim();
   const memo = document.getElementById('form-memo').value.trim();
 
@@ -553,7 +557,6 @@ export function downloadPerfumesExcel() {
     return alert('다운로드할 향수 데이터가 없습니다.');
   }
 
-  // 엑셀 시트에 들어갈 정돈된 데이터 매핑
   const excelData = cloudPerfumes.map((p, idx) => ({
     "No": idx + 1,
     "브랜드": p.brand || '',
@@ -571,29 +574,28 @@ export function downloadPerfumesExcel() {
     "시향기 및 메모": p.memo || ''
   }));
 
-  const worksheet = XLSX.utils.json_to_sheet(excelData);
+  const worksheet = window.XLSX.utils.json_to_sheet(excelData);
 
-  // 컬럼별 적정 너비 설정
   worksheet['!cols'] = [
-    { wch: 6 },  // No
-    { wch: 22 }, // 브랜드
-    { wch: 25 }, // 향수명
-    { wch: 15 }, // 향조 계열
-    { wch: 14 }, // 농도
-    { wch: 16 }, // 계절
-    { wch: 10 }, // 용량
-    { wch: 12 }, // 잔여량
-    { wch: 8 },  // 평점
-    { wch: 14 }, // 구매일자
-    { wch: 18 }, // 구매처
-    { wch: 30 }, // 노트 구성
-    { wch: 30 }, // Accords
-    { wch: 40 }  // 시향기
+    { wch: 6 },
+    { wch: 22 },
+    { wch: 25 },
+    { wch: 15 },
+    { wch: 14 },
+    { wch: 16 },
+    { wch: 10 },
+    { wch: 12 },
+    { wch: 8 },
+    { wch: 14 },
+    { wch: 18 },
+    { wch: 30 },
+    { wch: 30 },
+    { wch: 40 }
   ];
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "보유향수_컬렉션");
+  const workbook = window.XLSX.utils.book_new();
+  window.XLSX.utils.book_append_sheet(workbook, worksheet, "보유향수_컬렉션");
 
   const todayStr = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(workbook, `ScentTrack_향수컬렉션_${todayStr}.xlsx`);
+  window.XLSX.writeFile(workbook, `ScentTrack_향수컬렉션_${todayStr}.xlsx`);
 }
