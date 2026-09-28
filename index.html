@@ -13,6 +13,11 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
   <script type="module" src="js/app.js?v=14"></script>
+
+  <!-- SheetJS (엑셀 라이브러리) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script type="module" src="js/app.js?v=15"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-16">
 
@@ -49,6 +54,12 @@
         <span id="cloud-status" class="text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 font-mono">
           <i class="fa-solid fa-cloud"></i> DB 연결 중...
         </span>
+
+        <!-- 🌟 엑셀 다운로드 버튼 추가 -->
+        <button id="btn-export-excel" onclick="window.downloadPerfumesExcel()" class="text-xs md:text-sm bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/20">
+          <i class="fa-solid fa-file-excel text-xs"></i> 엑셀 다운로드
+        </button>
+
         <button id="btn-open-perfume-add" onclick="window.openPerfumeModal()" class="text-xs md:text-sm bg-purple-600 hover:bg-purple-500 text-white font-semibold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-purple-600/20">
           <i class="fa-solid fa-plus text-xs"></i> 향수 등록
         </button>
