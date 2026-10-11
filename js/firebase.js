@@ -26,6 +26,9 @@ export const DEFAULT_PERFUMES = [
   }
 ];
 
+// 🌟 누락되었던 위시리스트 기본값 선언
+export const DEFAULT_WISH_ITEMS = [];
+
 export const DEFAULT_VIP_ITEMS = [
   {
     id: 'vip_1',
@@ -176,7 +179,7 @@ export async function syncPerfumes(onRender) {
     try {
       await db.collection("perfume_archive").doc("user_collection").set({ 
         items: cloudPerfumes, 
-        wishItems: cloudWishItems,
+        wishItems: cloudWishItems, 
         vipItems: cloudVipItems 
       });
       if (statusEl) {
